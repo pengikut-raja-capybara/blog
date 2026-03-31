@@ -1,0 +1,56 @@
+media:
+  input: public/images      # Folder tempat gambar akan disimpan di repositorimu
+  output: /images           # URL path gambar yang akan di-render di frontend
+
+content:
+  # 1. Koleksi Artikel Blog (Banyak file JSON)
+  - name: posts
+    label: Artikel Blog
+    type: collection
+    path: content/posts     # Folder tempat file JSON artikel akan disimpan
+    format: json            # Menyimpan konten dalam bentuk JSON murni
+    filename: "{slug}.json" # Format penamaan file saat artikel baru dibuat
+    fields:
+      - name: title
+        label: Judul Artikel
+        type: string
+        required: true
+      - name: slug
+        label: URL Slug
+        type: string
+        required: true
+        pattern: 
+          regex: "^[a-z0-9-]+$"
+          message: "Slug hanya boleh berisi huruf kecil, angka, dan tanda hubung (-)"
+      - name: date
+        label: Tanggal Publikasi
+        type: datetime
+        required: true
+      - name: author
+        label: Penulis
+        type: string
+      - name: tags
+        label: Kategori/Tags
+        type: string
+        list: true          # Mengizinkan input lebih dari satu tag (array)
+      - name: excerpt
+        label: Ringkasan (Excerpt)
+        type: text
+      - name: body
+        label: Konten Utama
+        type: rich-text
+
+  # 2. Pengaturan Situs (Satu file JSON tunggal)
+  - name: site_settings
+    label: Pengaturan Web
+    type: file
+    path: data/settings.json # Disimpan di satu file spesifik
+    format: json
+    fields:
+      - name: site_title
+        label: Nama Blog
+        type: string
+        required: true
+      - name: description
+        label: Deskripsi Blog
+        type: text
