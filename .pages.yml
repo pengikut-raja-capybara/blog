@@ -24,7 +24,7 @@ content:
           message: "Slug hanya boleh berisi huruf kecil, angka, dan tanda hubung (-)"
       - name: date
         label: Tanggal Publikasi
-        type: datetime
+        type: date
         required: true
       - name: author
         label: Penulis
