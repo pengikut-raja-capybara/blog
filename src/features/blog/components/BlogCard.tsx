@@ -25,16 +25,18 @@ function BlogCard({
     month: 'long',
     year: 'numeric',
   });
-  const displayedTags = tags.slice(0, 2);
+  const displayedTags = tags.slice(0, 2); // Tampilkan maksimal 2 tag untuk menjaga tampilan tetap rapi
 
   return (
-    <article className="group overflow-hidden rounded-2xl border border-stone-200/70 bg-gradient-to-b from-stone-50 to-amber-50 shadow-sm transition-transform duration-300 hover:scale-105 hover:shadow-lg hover:shadow-stone-900/10">
-      <Link to={`/blog/${slug}`} aria-label={`Buka artikel: ${title}`}>
-        <div className="relative h-52 overflow-hidden bg-stone-200">
+    <article className="group flex h-full overflow-hidden rounded-2xl border border-tan/20 bg-gradient-to-b from-cream to-cream/80 shadow-sm transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-dark/10 dark:border-dark-bg-light/30 dark:from-dark-bg-light dark:to-dark-bg dark:hover:shadow-dark-bg-light/30">
+      <Link to={`/blog/${slug}`} aria-label={`Buka artikel: ${title}`} className="flex h-full w-full flex-col">
+        <div className="relative h-52 overflow-hidden bg-tan/20 dark:bg-dark-bg-light/30">
           <CdnImage
             src={image}
             cmsSource={cmsSource}
             alt={title}
+            proxyWidth={480}
+            proxyQuality={48}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
             loading="lazy"
             decoding="async"
@@ -42,13 +44,13 @@ function BlogCard({
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
         </div>
 
-        <div className="space-y-3 p-5">
+        <div className="flex flex-1 flex-col space-y-3 p-5">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-base font-semibold leading-snug text-stone-900">
+            <h2 className="line-clamp-2 text-base font-semibold leading-snug text-dark dark:text-dark-text">
               {title}
             </h2>
           </div>
-          <p className="line-clamp-3 text-sm leading-relaxed text-stone-700">
+          <p className="line-clamp-3 flex-1 text-sm leading-relaxed text-dark/70 dark:text-dark-text/70">
             {excerpt}
           </p>
 
@@ -57,7 +59,7 @@ function BlogCard({
               {displayedTags.map((tag) => (
                 <li
                   key={tag}
-                  className="rounded-full border border-stone-300/70 bg-stone-100/80 px-2.5 py-1 text-[11px] font-medium text-stone-700"
+                  className="rounded-full border border-tan/20 dark:border-dark-bg-light/30 bg-cream/80 dark:bg-dark-bg-light/20 px-2.5 py-1 text-[11px] font-medium text-dark/70 dark:text-dark-text/70"
                 >
                   #{tag}
                 </li>
@@ -65,12 +67,12 @@ function BlogCard({
             </ul>
           ) : null}
 
-          <div className="flex items-center justify-between gap-3 border-t border-stone-200/80 pt-3 text-[11px] text-stone-500">
+          <div className="mt-auto flex items-center justify-between gap-3 border-t border-tan/20 pt-3 text-[11px] text-dark/50 dark:border-dark-bg-light/30 dark:text-dark-text/50">
             <time className="block font-medium" dateTime={date}>
               {formattedDate}
             </time>
             {author ? (
-              <p className="truncate text-right text-xs font-semibold text-stone-700">
+              <p className="truncate text-right text-xs font-semibold text-dark/70 dark:text-dark-text/70">
                 {author}
               </p>
             ) : null}
