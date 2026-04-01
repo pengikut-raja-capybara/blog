@@ -26,6 +26,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://pengikut-raja-capybara.github.io/blog/mengenal-javascript</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://pengikut-raja-capybara.github.io/blog/pengikut-raja-capybara</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
