@@ -4,9 +4,9 @@ import logoImg from '../../assets/logo.png';
 import { useDarkMode } from '../../hooks/useDarkMode';
 
 const primaryNavLinks = [
-  { label: 'Blog', to: '/' },
-  { label: 'Tentang', to: '/about' },
-  { label: 'Kontak', to: '/contact' },
+  { label: 'Blog', to: '/blog/' },
+  { label: 'Tentang', to: '/blog/about' },
+  { label: 'Kontak', to: '/blog/contact' },
 ];
 
 function SiteHeader() {
