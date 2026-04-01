@@ -9,7 +9,7 @@ content:
     type: collection
     path: content/posts     # Folder tempat file JSON artikel akan disimpan
     format: json            # Menyimpan konten dalam bentuk JSON murni
-    filename: "{slug}.json" # Format penamaan file saat artikel baru dibuat
+    filename: "{fields.slug}.json" # Format penamaan file saat artikel baru dibuat
     fields:
       - name: title
         label: Judul Artikel
