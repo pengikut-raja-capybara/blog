@@ -1,8 +1,15 @@
 import { Gem, Handshake, Leaf, Wrench } from 'lucide-react';
+import { SeoMeta } from '../components/seo';
 
 function About() {
   return (
     <article className="max-w-4xl mx-auto py-16 px-6 text-dark dark:text-dark-text">
+      <SeoMeta
+        title="Tentang Kami"
+        description="Pelajari filosofi kerja Pengikut Raja Capybara: kolaborasi tanpa ego, arsitektur terukur, dan engineering berkelanjutan."
+        path="/blog/about"
+      />
+
       {/* Header Organisasi */}
       <header className="mb-16 border-b border-dark/10 dark:border-emerald-200/15 pb-10 text-center">
         <h1 className="text-5xl md:text-6xl font-black text-dark dark:text-dark-text mb-6 tracking-tighter uppercase">

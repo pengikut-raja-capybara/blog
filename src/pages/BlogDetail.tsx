@@ -1,7 +1,9 @@
 import { Link, useParams } from 'react-router';
+import { SeoMeta } from '../components/seo';
 import CdnImage from '../components/ui/CdnImage';
 import { BLOG_CMS_SOURCE } from '../features/blog/config/cmsSource';
 import { useBlogPostQuery } from '../features/blog/hooks/useBlogQueries';
+import { resolveCmsImageUrl } from '../features/blog/services/cms';
 import { toSafeHtml } from '../utils/richContent';
 
 function BlogDetail() {
@@ -13,6 +15,12 @@ function BlogDetail() {
   if (postQuery.isLoading) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-20 text-center">
+        <SeoMeta
+          title="Memuat Artikel"
+          description="Sedang memuat artikel dari arsip Pengikut Raja Capybara."
+          path={slug ? `/blog/${slug}` : '/blog/'}
+        />
+
         <div className="animate-pulse flex flex-col items-center">
           <div className="w-12 h-12 bg-green-200 rounded-full mb-4"></div>
           <p className="text-sm font-medium text-dark/40">Menyusun catatan...</p>
@@ -24,6 +32,13 @@ function BlogDetail() {
   if (postQuery.error || !post) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-20 text-center">
+        <SeoMeta
+          title="Artikel Tidak Ditemukan"
+          description="Artikel yang kamu cari tidak ditemukan di arsip Pengikut Raja Capybara."
+          path={slug ? `/blog/${slug}` : '/blog/'}
+          noIndex
+        />
+
         <p className="text-lg font-medium text-rose-600">Catatan tidak ditemukan di dalam arsip.</p>
         <Link to="/" className="text-dark/50 underline mt-4 inline-block italic">Kembali ke gerbang utama</Link>
       </div>
@@ -31,9 +46,33 @@ function BlogDetail() {
   }
 
   const renderedBody = toSafeHtml(post.body, BLOG_CMS_SOURCE);
+  const postImage = resolveCmsImageUrl(post.image, BLOG_CMS_SOURCE);
+  const canonicalPath = `/blog/${post.slug}`;
 
   return (
     <article className="max-w-4xl mx-auto py-12 px-6">
+      <SeoMeta
+        title={post.title}
+        description={post.excerpt ?? `Baca artikel ${post.title} di Pengikut Raja Capybara.`}
+        path={canonicalPath}
+        type="article"
+        image={post.image ? postImage : undefined}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'BlogPosting',
+          headline: post.title,
+          description: post.excerpt ?? undefined,
+          datePublished: post.date,
+          author: {
+            '@type': 'Person',
+            name: post.author ?? 'Pengikut Raja Capybara',
+          },
+          image: post.image ? [postImage] : undefined,
+          keywords: post.tags,
+          mainEntityOfPage: canonicalPath,
+        }}
+      />
+
       {/* Tombol Kembali yang Minimalis */}
       <Link 
         className="group inline-flex items-center text-sm font-bold text-green-700 dark:text-green-500 mb-12 transition-all hover:translate-x-[-4px]"

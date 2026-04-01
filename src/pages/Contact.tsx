@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { GitMerge, Mail } from "lucide-react";
+import { SeoMeta } from '../components/seo';
 
 function Contact() {
   const [formData, setFormData] = useState({
@@ -22,6 +23,12 @@ function Contact() {
 
   return (
     <article className="max-w-5xl mx-auto py-10 px-6 text-dark dark:text-dark-text">
+      <SeoMeta
+        title="Kontak"
+        description="Hubungi Pengikut Raja Capybara untuk kolaborasi, diskusi proyek open source, atau konsultasi teknis."
+        path="/blog/contact"
+      />
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
         {/* Sisi Kiri: Narasi & Info */}
         <div>

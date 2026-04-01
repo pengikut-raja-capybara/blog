@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import BlogCard from '../features/blog/components/BlogCard';
+import { SeoMeta } from '../components/seo';
 import { BLOG_CMS_SOURCE } from '../features/blog/config/cmsSource';
 import {
   useBlogPostsQuery,
@@ -26,6 +27,20 @@ function Home() {
 
   return (
     <div className="space-y-24">
+      <SeoMeta
+        title={settings?.site_title ?? 'Pengikut Raja Capybara'}
+        description={settings?.description ?? 'Manifesto kolaborasi open source yang mengutamakan kebermanfaatan, etika, dan harmoni.'}
+        path="/blog/"
+        type="website"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'WebSite',
+          name: settings?.site_title ?? 'Pengikut Raja Capybara',
+          description: settings?.description ?? 'Manifesto kolaborasi open source yang mengutamakan kebermanfaatan, etika, dan harmoni.',
+          url: '/blog/',
+        }}
+      />
+
       {/* Hero Section - Lebih Berkarakter */}
       <section className="relative pt-12 md:pt-20 overflow-hidden">
         {/* Dekorasi Latar Belakang Halus */}
