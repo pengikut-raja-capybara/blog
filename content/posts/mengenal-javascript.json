@@ -1,0 +1,14 @@
+{
+  "title": "Mengenal JavaScript: Nyawa di Balik Halaman Web Interaktif",
+  "slug": "mengenal-javascript",
+  "image": "/images/273587c7-41cb-4a1d-9407-9d0045a21eba.jpg",
+  "date": "2026-04-01",
+  "author": "Raja Capybara",
+  "tags": [
+    "Web",
+    "Javascript",
+    "Teknologi"
+  ],
+  "excerpt": "JavaScript (sering disingkat JS) adalah bahasa pemrograman yang digunakan untuk membuat halaman web menjadi hidup dan interaktif.",
+  "body": "### Apa Itu JavaScript?\n\nJavaScript (sering disingkat JS) adalah bahasa pemrograman yang digunakan untuk membuat halaman web menjadi hidup dan interaktif. Jika sebuah situs web diibaratkan sebagai sebuah rumah, maka:\n\n- **HTML** adalah pondasi dan struktur dindingnya.\n- **CSS** adalah cat, dekorasi, dan desain interiornya.\n- **JavaScript** adalah sistem listrik dan airnya—yang membuat lampu bisa menyala saat sakelar ditekan, atau pintu bisa terbuka secara otomatis.\n\n### Apa Saja yang Bisa Dilakukan JavaScript?\n\nAwalnya, JavaScript hanya digunakan untuk hal-hal sederhana di peramban (browser). Tapi sekarang, kemampuannya sudah luar biasa luas:\n\n- **Interaktivitas Halaman:** Membuat *pop-up*, animasi, tombol yang merespons saat diklik, atau galeri gambar yang bisa digeser (*slider*).\n- **Memperbarui Konten secara Langsung:** Memuat data baru tanpa perlu memuat ulang (*refresh*) seluruh halaman web (seperti saat kamu menggulir linimasa media sosial).\n- **Pengembangan Aplikasi Penuh:** * *Front-end* (tampilan web) menggunakan kerangka kerja (*framework*) seperti React atau Vue.\n  - *Back-end* (server) menggunakan Node.js.\n  - Aplikasi *mobile* (Android/iOS) menggunakan React Native.\n\n### Mengapa JavaScript Sangat Populer?\n\nKamu bisa menambahkan bagian ini untuk meyakinkan pembaca mengapa belajar JS itu penting:\n\n- **Ramah Pemula:** Mudah dipelajari sebagai bahasa pemrograman pertama karena tidak perlu instalasi rumit; cukup menggunakan peramban (seperti Chrome atau Firefox) dan editor teks.\n- **Komunitas yang Besar:** Karena digunakan oleh hampir seluruh web di dunia, sangat mudah menemukan solusi, tutorial, atau bantuan jika mengalami kendala (*error*).\n- **Peluang Karir yang Luas:** Kebutuhan industri terhadap pengembang JavaScript (*JavaScript Developer*) sangat tinggi dan terus meningkat.\n\n"
+}
