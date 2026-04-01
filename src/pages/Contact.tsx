@@ -3,6 +3,7 @@ import { GitMerge, Mail } from "lucide-react";
 import { SeoMeta } from '../components/seo';
 
 function Contact() {
+  const whatsappNumber = '6285157725864';
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -16,8 +17,17 @@ function Contact() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Pesan Terkirim:", formData);
-    alert("Pesan Anda telah diterima oleh Sang Raja. Kami akan membalas dengan tenang.");
+
+    const whatsappMessage = [
+      'Halo Raja Capybara,',
+      `Perkenalkan, diri ini *${formData.name}* dengan email *${formData.email}*, ingin menghubungi Anda melalui WhatsApp untuk berdiskusi tentang:`,
+      '',
+      formData.message,
+    ].join('\n');
+
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+
     setFormData({ name: "", email: "", message: "" });
   };
 
