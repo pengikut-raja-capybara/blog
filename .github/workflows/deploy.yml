@@ -27,12 +27,10 @@ jobs:
       - name: Build
         run: bun run build
 
-      - name: Create SPA fallback for GitHub Pages
-        run: cp dist/index.html dist/404.html
-
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
           publish_branch: gh-pages
+          enable_jekyll: false

@@ -7,6 +7,19 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function () {
+        const redirect = sessionStorage.getItem('spa-redirect');
+
+        if (!redirect) {
+          return;
+        }
+
+        sessionStorage.removeItem('spa-redirect');
+        const target = new URL(redirect, window.location.origin);
+        window.history.replaceState(null, '', `${target.pathname}${target.search}${target.hash}`);
+      })();
+    </script>
     <title>pengikut-raja-capybara-blog</title>
   </head>
   <body>

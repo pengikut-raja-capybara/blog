@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecting...</title>
+    <script>
+      (function () {
+        var path = window.location.pathname;
+        var search = window.location.search || '';
+        var hash = window.location.hash || '';
+
+        // Keep the repository base path (/blog) for GitHub Pages project sites.
+        var basePath = '/blog';
+
+        if (path === basePath || path === basePath + '/' || path.indexOf(basePath + '/') !== 0) {
+          window.location.replace(basePath + '/');
+          return;
+        }
+
+        var routePath = path.slice(basePath.length) || '/';
+        sessionStorage.setItem('spa-redirect', routePath + search + hash);
+        window.location.replace(basePath + '/');
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>
