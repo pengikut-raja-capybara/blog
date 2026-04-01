@@ -1,10 +1,42 @@
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
+import { resolveCmsImageUrl, type CmsSourceConfig } from '../features/blog/services/cms';
 import type { BlogBody } from '../types/blog';
 
 const HTML_TAG_PATTERN = /<\/?[a-z][\s\S]*>/i;
 
 export type ContentFormat = 'markdown' | 'html';
+
+function toRenderableImagePath(path: string, cmsSource?: CmsSourceConfig): string {
+  const trimmedPath = path.trim();
+
+  if (!trimmedPath || /^(?:https?:|data:|blob:|\/\/)/i.test(trimmedPath)) {
+    return trimmedPath;
+  }
+
+  const withoutDotPrefix = trimmedPath.replace(/^\.\//, '');
+  const normalizedPath = withoutDotPrefix.startsWith('/')
+    ? withoutDotPrefix
+    : `/${withoutDotPrefix}`;
+
+  if (normalizedPath.startsWith('/public/')) {
+    return normalizedPath;
+  }
+
+  if (normalizedPath.startsWith('/images/')) {
+    return cmsSource ? resolveCmsImageUrl(normalizedPath, cmsSource) : normalizedPath;
+  }
+
+  return normalizedPath;
+}
+
+function normalizeInlineImageSrc(html: string, cmsSource?: CmsSourceConfig): string {
+  return html.replace(
+    /(<img\b[^>]*\bsrc\s*=\s*["'])([^"']+)(["'][^>]*>)/gi,
+    (_match, prefix: string, src: string, suffix: string) =>
+      `${prefix}${toRenderableImagePath(src, cmsSource)}${suffix}`,
+  );
+}
 
 function escapeHtml(value: string): string {
   return value
@@ -237,7 +269,7 @@ export function extractMarkdownBody(body: BlogBody): string | null {
   return null;
 }
 
-export function toSafeHtml(body: BlogBody): string {
+export function toSafeHtml(body: BlogBody, cmsSource?: CmsSourceConfig): string {
   const content = extractContentString(body).trim();
 
   if (!content) {
@@ -247,7 +279,9 @@ export function toSafeHtml(body: BlogBody): string {
   const format = detectContentFormat(content);
   const rawHtml = format === 'html' ? content : parseMarkdownToHtml(content);
 
-  return DOMPurify.sanitize(rawHtml, {
+  const safeHtml = DOMPurify.sanitize(rawHtml, {
     USE_PROFILES: { html: true },
   });
+
+  return normalizeInlineImageSrc(safeHtml, cmsSource);
 }
