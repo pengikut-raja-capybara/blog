@@ -7,13 +7,13 @@ describe('Contact', () => {
   it('menampilkan info kontak utama', () => {
     renderWithProviders(<Contact />);
 
-    expect(screen.getByRole('heading', { name: 'Hubungi Kerajaan Capybara' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Mari Berdiskusi' })).toBeTruthy();
 
     const emailLink = screen
       .getAllByRole('link')
       .find((link) => link.getAttribute('href')?.startsWith('mailto:'));
     expect(emailLink).toBeTruthy();
-    expect(emailLink?.getAttribute('href')).toContain('mailto:');
+    expect(emailLink?.getAttribute('href')).toContain('mailto:rajacapybara275@gmail.com');
 
     expect(screen.getByRole('link', { name: 'github.com/pengikut-raja-capybara' })).toBeTruthy();
   });

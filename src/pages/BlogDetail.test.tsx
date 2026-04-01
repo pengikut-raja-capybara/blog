@@ -14,6 +14,11 @@ const { mockFetchPostBySlug } = vi.hoisted(() => {
 
 vi.mock('../features/blog/services/cms', () => ({
   fetchPostBySlug: mockFetchPostBySlug,
+  resolveCmsImageUrl: (imagePath: string | undefined) => {
+    if (!imagePath) return '/images/placeholder-blog.jpg';
+    if (/^https?:\/\//i.test(imagePath)) return imagePath;
+    return `https://cdn.jsdelivr.net/gh/pengikut-raja-capybara/blog@content/public${imagePath}`;
+  },
 }));
 
 function renderDetail(path: string, queryClient = createTestQueryClient()) {
@@ -65,7 +70,7 @@ describe('BlogDetail', () => {
     renderDetail('/blog/strategi-sungai-raja-capybara', queryClient);
 
     expect(await screen.findByRole('heading', { name: post.title })).toBeTruthy();
-    expect(mockFetchPostBySlug).toHaveBeenCalledWith(BLOG_CMS_SOURCE, post.slug);
+    expect(mockFetchPostBySlug).toHaveBeenCalledWith(post.slug);
   });
 
   it('merender body markdown menjadi HTML', async () => {
@@ -77,7 +82,7 @@ describe('BlogDetail', () => {
       author: 'Raja Capybara',
       tags: ['markdown'],
       excerpt: 'Contoh markdown.',
-      body: '## Subjudul Markdown\n\nIni **tebal** dan [Tautan](https://example.com).',
+      body: '## Subjudul Markdown\n\nIni **tebal** dan [Tautan](https://example.com).\n\n![Capybara](/images/capybara-inline.jpg)',
     };
 
     mockFetchPostBySlug.mockResolvedValueOnce(post);
@@ -90,6 +95,9 @@ describe('BlogDetail', () => {
     expect(screen.getByText('Subjudul Markdown')).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Tautan' }).getAttribute('href')).toBe(
       'https://example.com',
+    );
+    expect(screen.getByAltText('Capybara').getAttribute('src')).toBe(
+      'https://cdn.jsdelivr.net/gh/pengikut-raja-capybara/blog@content/public/images/capybara-inline.jpg',
     );
   });
 
