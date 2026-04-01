@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { GitMerge, Mail } from "lucide-react";
 
 function Contact() {
   const [formData, setFormData] = useState({
@@ -31,7 +32,9 @@ function Contact() {
 
           <div className="space-y-6">
             <div className="flex items-center gap-4 group">
-              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/35 rounded-full flex items-center justify-center text-2xl">✉️</div>
+              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/35 rounded-full flex items-center justify-center text-green-700 dark:text-green-300">
+                <Mail className="w-5 h-5" aria-hidden="true" />
+              </div>
               <div>
                 <p className="text-sm font-bold text-green-700 dark:text-green-300 uppercase tracking-wider">Email</p>
                 <a href="mailto:rajacapybara275@gmail.com" className="text-dark dark:text-dark-text hover:text-green-700 dark:hover:text-green-300 transition-colors">
@@ -41,7 +44,9 @@ function Contact() {
             </div>
 
             <div className="flex items-center gap-4 group">
-              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/35 rounded-full flex items-center justify-center text-2xl">📂</div>
+              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/35 rounded-full flex items-center justify-center text-green-700 dark:text-green-300">
+                <GitMerge className="w-5 h-5" aria-hidden="true" />
+              </div>
               <div>
                 <p className="text-sm font-bold text-green-700 dark:text-green-300 uppercase tracking-wider">GitHub</p>
                 <a href="https://github.com/pengikut-raja-capybara" target="_blank" rel="noreferrer" className="text-dark dark:text-dark-text hover:text-green-700 dark:hover:text-green-300 transition-colors">
