@@ -1,73 +1,145 @@
-# React + TypeScript + Vite
+# Pengikut Raja Capybara Blog
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Blog SPA berbasis React + Vite yang mengambil konten dari repository CMS (JSON) dan dipublikasikan ke GitHub Pages.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React 19 + TypeScript
+- Vite
+- React Router
+- TanStack Query
+- Tailwind CSS
+- Vitest + Testing Library
 
-## React Compiler
+## Route Aplikasi
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Aplikasi menggunakan base path `/blog`:
 
-## Expanding the ESLint configuration
+- `/blog/` -> Home (list artikel)
+- `/blog/about` -> Tentang
+- `/blog/contact` -> Kontak
+- `/blog/:slug` -> Detail artikel
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Konfigurasi route ada di `src/App.tsx`.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Sumber Konten (CMS)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Konten diambil dari repo CMS:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- Owner: `pengikut-raja-capybara`
+- Repo: `blog`
+- Branch: `content`
+- Folder post: `content/posts`
+
+Konfigurasi ada di `src/features/blog/config/cmsSource.ts`.
+
+## Menjalankan Lokal
+
+Install dependency:
+
+```bash
+bun install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Menjalankan dev server:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+bun run dev
+```
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Build production:
+
+```bash
+bun run build
+```
+
+Preview build:
+
+```bash
+bun run preview
+```
+
+## Script Penting
+
+- `bun run dev` -> jalankan mode development
+- `bun run build` -> build production
+- `bun run lint` -> lint source
+- `bun run test` -> jalankan test sekali
+- `bun run test:watch` -> test mode watch
+- `bun run sitemap:generate` -> generate `sitemap.xml`
+- `bun run spa:routes` -> generate static route files untuk deep-link + preview crawler
+
+## SEO dan Sitemap
+
+Project sudah menyiapkan:
+
+- Metadata SEO per halaman
+- `sitemap.xml` otomatis
+- Static HTML route per slug untuk crawler/in-app preview (mis. WhatsApp)
+
+Generator terkait:
+
+- `scripts/generate-sitemap.mjs`
+- `scripts/generate-spa-routes.mjs`
+
+## GitHub Actions
+
+### 1) Deploy utama
+
+File: `.github/workflows/deploy.yml`
+
+Trigger:
+
+- Push ke `main`
+- Manual (`workflow_dispatch`)
+
+Pipeline:
+
+1. Install dependency
+2. Build aplikasi
+3. Generate sitemap
+4. Generate SPA route files
+5. Deploy ke branch `gh-pages`
+
+### 2) Sinkronisasi berkala (cron)
+
+File: `.github/workflows/sync-content-cron.yml`
+
+Trigger:
+
+- Tiap 3 hari (`15 0 */3 * *`)
+- Manual (`workflow_dispatch`)
+
+Pipeline sama dengan deploy utama: build + sitemap + SPA routes + publish ke `gh-pages`.
+
+## Variable yang Perlu Disiapkan
+
+Di GitHub repository settings -> Secrets and variables -> Actions -> Variables:
+
+- `SITE_URL`
+
+Contoh nilai:
+
+`https://pengikut-raja-capybara.github.io`
+
+Catatan: jangan tambahkan `/blog` di `SITE_URL` karena base path sudah ditangani oleh workflow.
+
+## Catatan Deploy GitHub Pages
+
+- Branch publish: `gh-pages`
+- App base path: `/blog`
+- Static route files dibuat otomatis agar direct access URL slug tetap terbuka
+
+## Testing
+
+Jalankan semua test:
+
+```bash
+bun run test
+```
+
+Jalankan test pages saja:
+
+```bash
+bun run test src/pages
 ```
