@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { Sun, Moon } from 'lucide-react';
 import logoImg from '../../assets/logo.png';
@@ -24,7 +25,34 @@ function normalizePathname(pathname: string) {
 function SiteHeader() {
   const { isDark, toggle } = useDarkMode();
   const location = useLocation();
+  const [now, setNow] = useState(() => new Date());
   const normalizedCurrentPath = normalizePathname(location.pathname);
+
+  const timeFormatter = useMemo(
+    () => new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    [],
+  );
+
+  const timeLabel = useMemo(() => {
+    const parts = timeFormatter.formatToParts(now);
+    const hour = parts.find((part) => part.type === 'hour')?.value ?? '--';
+    const minute = parts.find((part) => part.type === 'minute')?.value ?? '--';
+    const second = parts.find((part) => part.type === 'second')?.value ?? '--';
+    const dayPeriod = parts.find((part) => part.type === 'dayPeriod')?.value;
+    const baseTime = `${hour}:${minute}:${second}`;
+
+    return dayPeriod ? `${baseTime} ${dayPeriod}` : baseTime;
+  }, [now, timeFormatter]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, []);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-cream/70 dark:bg-dark-bg/70 backdrop-blur-xl border-b border-dark/5 dark:border-white/5 transition-all duration-500">
@@ -70,6 +98,14 @@ function SiteHeader() {
           </div>
 
           <div className="h-6 w-[1px] bg-dark/10 dark:bg-white/10 mx-2 hidden sm:block" />
+
+          <time
+            dateTime={now.toISOString()}
+            className="hidden sm:inline-flex items-center px-3 py-2 rounded-xl border border-dark/10 dark:border-white/15 bg-white/75 dark:bg-dark-bg-light/55 text-sm font-semibold tabular-nums text-dark/80 dark:text-dark-text/80 shadow-sm"
+            aria-label="Waktu saat ini"
+          >
+            {timeLabel}
+          </time>
 
           {/* Toggle Mode Gelap */}
           <button
