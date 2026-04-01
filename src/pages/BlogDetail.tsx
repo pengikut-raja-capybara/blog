@@ -1,10 +1,35 @@
 import { Link, useParams } from 'react-router';
+import { Share2 } from 'lucide-react';
 import { SeoMeta } from '../components/seo';
 import CdnImage from '../components/ui/CdnImage';
 import { BLOG_CMS_SOURCE } from '../features/blog/config/cmsSource';
 import { useBlogPostQuery } from '../features/blog/hooks/useBlogQueries';
 import { resolveCmsImageUrl } from '../features/blog/services/cms';
 import { toSafeHtml } from '../utils/richContent';
+
+const WORDS_PER_MINUTE = 200;
+
+function countWordsFromHtml(html: string): number {
+  const plainText = html
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!plainText) {
+    return 0;
+  }
+
+  return plainText.split(' ').length;
+}
+
+function estimateReadMinutes(wordCount: number): number {
+  if (wordCount <= 0) {
+    return 1;
+  }
+
+  return Math.max(1, Math.ceil(wordCount / WORDS_PER_MINUTE));
+}
 
 function BlogDetail() {
   const { slug } = useParams();
@@ -48,6 +73,27 @@ function BlogDetail() {
   const renderedBody = toSafeHtml(post.body, BLOG_CMS_SOURCE);
   const postImage = resolveCmsImageUrl(post.image, BLOG_CMS_SOURCE);
   const canonicalPath = `/blog/${post.slug}`;
+  const wordCount = countWordsFromHtml(renderedBody);
+  const readingMinutes = estimateReadMinutes(wordCount);
+
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}${canonicalPath}`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: post.title,
+          text: post.excerpt ?? `Baca artikel ${post.title}`,
+          url: shareUrl,
+        });
+        return;
+      }
+
+      await navigator.clipboard.writeText(shareUrl);
+    } catch {
+        return;
+    }
+  };
 
   return (
     <article className="max-w-4xl mx-auto py-12 px-6">
@@ -100,10 +146,22 @@ function BlogDetail() {
           <div className="w-10 h-10 bg-green-700 rounded-full flex items-center justify-center text-white text-xs font-bold">
             {post.author?.charAt(0) || 'C'}
           </div>
-          <div className="text-sm">
+          <div className="text-sm flex-1">
             <p className="font-bold text-dark dark:text-dark-text">{post.author || 'Anonim'}</p>
             <time className="text-dark/50 dark:text-dark-text/40" dateTime={post.date}>Terbit pada {post.date}</time>
+            <p className="text-dark/45 dark:text-dark-text/45 mt-1">
+              {wordCount} kata • estimasi baca {readingMinutes} menit
+            </p>
           </div>
+          <button
+            type="button"
+            onClick={handleShare}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-green-700 hover:bg-green-800 dark:bg-green-600 dark:hover:bg-green-500 text-white text-xs font-bold uppercase tracking-wide transition-all"
+            aria-label="Bagikan artikel"
+          >
+            <Share2 className="w-4 h-4" />
+            Share
+          </button>
         </div>
       </header>
 
