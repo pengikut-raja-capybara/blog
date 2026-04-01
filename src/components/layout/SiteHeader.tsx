@@ -9,9 +9,22 @@ const primaryNavLinks = [
   { label: 'Kontak', to: '/blog/contact' },
 ];
 
+function normalizePathname(pathname: string) {
+  if (!pathname) {
+    return '/';
+  }
+
+  if (pathname === '/') {
+    return pathname;
+  }
+
+  return pathname.replace(/\/+$/, '');
+}
+
 function SiteHeader() {
   const { isDark, toggle } = useDarkMode();
   const location = useLocation();
+  const normalizedCurrentPath = normalizePathname(location.pathname);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-cream/70 dark:bg-dark-bg/70 backdrop-blur-xl border-b border-dark/5 dark:border-white/5 transition-all duration-500">
@@ -39,7 +52,7 @@ function SiteHeader() {
         <nav className="flex items-center gap-2 md:gap-4">
           <div className="hidden sm:flex items-center gap-1 bg-dark/5 dark:bg-white/5 p-1 rounded-full border border-dark/5 dark:border-white/5">
             {primaryNavLinks.map((link) => {
-              const isActive = location.pathname === link.to;
+              const isActive = normalizedCurrentPath === normalizePathname(link.to);
               return (
                 <Link 
                   key={link.to} 
