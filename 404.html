@@ -17,9 +17,16 @@
           return;
         }
 
-        var routePath = path.slice(basePath.length) || '/';
-        sessionStorage.setItem('spa-redirect', routePath + search + hash);
-        window.location.replace(basePath + '/');
+        var fullPath = path + search + hash;
+
+        try {
+          sessionStorage.setItem('spa-redirect', fullPath);
+        } catch (error) {
+          // Ignore storage failures and continue with query-param fallback.
+        }
+
+        var redirectTarget = basePath + '/?p=' + encodeURIComponent(fullPath);
+        window.location.replace(redirectTarget);
       })();
     </script>
   </head>
