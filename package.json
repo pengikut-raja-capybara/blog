@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "spa:routes": "node scripts/generate-spa-routes.mjs",
     "sitemap:generate": "node scripts/generate-sitemap.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
