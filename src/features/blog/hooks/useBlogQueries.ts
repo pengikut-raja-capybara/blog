@@ -12,7 +12,7 @@ import type { BlogPost, SiteSettings } from '../../../types/blog';
 export function useBlogPostsQuery(source: CmsSourceConfig = BLOG_CMS_SOURCE) {
   return useQuery<BlogPost[]>({
     queryKey: blogQueryKeys.posts(source),
-    queryFn: () => fetchPosts(source),
+    queryFn: () => fetchPosts(),
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -20,7 +20,7 @@ export function useBlogPostsQuery(source: CmsSourceConfig = BLOG_CMS_SOURCE) {
 export function useSiteSettingsQuery(source: CmsSourceConfig = BLOG_CMS_SOURCE) {
   return useQuery<SiteSettings>({
     queryKey: blogQueryKeys.settings(source),
-    queryFn: () => fetchSiteSettings(source),
+    queryFn: () => fetchSiteSettings(),
     staleTime: 30 * 60 * 1000,
   });
 }
@@ -35,7 +35,7 @@ export function useBlogPostQuery(
 
   return useQuery<BlogPost>({
     queryKey: blogQueryKeys.post(source, slug),
-    queryFn: () => fetchPostBySlug(source, slug ?? ''),
+    queryFn: () => fetchPostBySlug(slug ?? ''),
     enabled: Boolean(slug) && !cachedPost,
     initialData: cachedPost,
     staleTime: 5 * 60 * 1000,

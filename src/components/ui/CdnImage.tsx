@@ -6,6 +6,8 @@ type CdnImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src'> & {
   src?: string;
   cmsSource?: CmsSourceConfig;
   fallbackSrc?: string;
+  proxyWidth?: number;
+  proxyQuality?: number;
 };
 
 const DEFAULT_PLACEHOLDER = '/images/placeholder-blog.jpg';
@@ -44,21 +46,39 @@ function toAbsoluteCmsUrls(imagePath: string, cmsSource?: CmsSourceConfig): stri
   return [jsDelivr, githubRaw];
 }
 
-function toWeservUrl(imageUrl: string): string {
-  return `https://wsrv.nl/?url=${encodeURIComponent(imageUrl)}&output=webp`;
+function toWeservUrl(imageUrl: string, options?: { width?: number; quality?: number }): string {
+  const params = new URLSearchParams({
+    url: imageUrl,
+    output: 'webp',
+  });
+
+  if (Number.isFinite(options?.width) && (options?.width ?? 0) > 0) {
+    params.set('w', String(options?.width));
+  }
+
+  if (Number.isFinite(options?.quality) && (options?.quality ?? 0) > 0) {
+    params.set('q', String(options?.quality));
+  }
+
+  return `https://wsrv.nl/?${params.toString()}`;
+}
+
+function isAbsoluteHttpUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value);
 }
 
 function buildCandidateUrls(
   src: string | undefined,
   cmsSource: CmsSourceConfig | undefined,
   fallbackSrc: string,
+  options?: { width?: number; quality?: number },
 ): string[] {
   if (!src) {
     return [fallbackSrc];
   }
 
   const [primary, backup] = toAbsoluteCmsUrls(src, cmsSource);
-  const candidates = [toWeservUrl(primary), primary];
+  const candidates = isAbsoluteHttpUrl(primary) ? [toWeservUrl(primary, options), primary] : [primary];
 
   if (backup && backup !== primary) {
     candidates.push(backup);
@@ -75,19 +95,25 @@ function CdnImage({
   src,
   cmsSource,
   fallbackSrc = DEFAULT_PLACEHOLDER,
+  proxyWidth,
+  proxyQuality,
   alt,
   onError,
   ...imgProps
 }: CdnImageProps) {
   const candidates = useMemo(
-    () => buildCandidateUrls(src, cmsSource, fallbackSrc),
-    [src, cmsSource, fallbackSrc],
+    () =>
+      buildCandidateUrls(src, cmsSource, fallbackSrc, {
+        width: proxyWidth,
+        quality: proxyQuality,
+      }),
+    [src, cmsSource, fallbackSrc, proxyWidth, proxyQuality],
   );
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
     setActiveIndex(0);
-  }, [src, cmsSource, fallbackSrc]);
+  }, [src, cmsSource, fallbackSrc, proxyWidth, proxyQuality]);
 
   return (
     <img
