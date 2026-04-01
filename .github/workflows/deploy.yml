@@ -41,6 +41,8 @@ jobs:
 
       - name: Generate SPA route files
         env:
+          SITE_URL: ${{ vars.SITE_URL }}
+          APP_BASE_PATH: /blog
           CONTENT_OWNER: pengikut-raja-capybara
           CONTENT_REPO: blog
           CONTENT_BRANCH: content
