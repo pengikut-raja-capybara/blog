@@ -9,15 +9,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script>
       (function () {
-        const redirect = sessionStorage.getItem('spa-redirect');
+        const basePath = '/blog';
+        const currentUrl = new URL(window.location.href);
+        const redirectFromQuery = currentUrl.searchParams.get('p');
+        const redirectFromStorage = sessionStorage.getItem('spa-redirect');
+        const redirect = redirectFromQuery || redirectFromStorage;
 
         if (!redirect) {
           return;
         }
 
         sessionStorage.removeItem('spa-redirect');
+
         const target = new URL(redirect, window.location.origin);
-        window.history.replaceState(null, '', `${target.pathname}${target.search}${target.hash}`);
+        const normalizedPath = target.pathname.startsWith(basePath + '/') || target.pathname === basePath
+          ? target.pathname
+          : `${basePath}${target.pathname.startsWith('/') ? target.pathname : `/${target.pathname}`}`;
+
+        if (redirectFromQuery) {
+          currentUrl.searchParams.delete('p');
+          const remainingQuery = currentUrl.searchParams.toString();
+          const queryPart = remainingQuery ? `?${remainingQuery}` : '';
+          window.history.replaceState(null, '', `${normalizedPath}${target.search || queryPart}${target.hash}`);
+          return;
+        }
+
+        window.history.replaceState(null, '', `${normalizedPath}${target.search}${target.hash}`);
       })();
     </script>
     <title>pengikut-raja-capybara-blog</title>
