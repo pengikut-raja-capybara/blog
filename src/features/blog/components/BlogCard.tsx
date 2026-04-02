@@ -1,7 +1,7 @@
 import type { BlogPost } from '../../../types/blog';
 import { Link } from 'react-router';
 import CdnImage from '../../../components/ui/CdnImage';
-import type { CmsSourceConfig } from '../services/cms';
+import type { CmsSourceConfig } from '../types/cms';
 
 type BlogCardProps = Pick<
   BlogPost,

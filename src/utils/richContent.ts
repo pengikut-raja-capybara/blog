@@ -1,6 +1,7 @@
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
-import { resolveCmsImageUrl, type CmsSourceConfig } from '../features/blog/services/cms';
+import { resolveCmsImageUrl } from '../features/blog/services/cms';
+import type { CmsSourceConfig } from '../features/blog/types/cms';
 import type { BlogBody } from '../types/blog';
 
 const HTML_TAG_PATTERN = /<\/?[a-z][\s\S]*>/i;

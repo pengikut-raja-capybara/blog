@@ -1,15 +1,13 @@
 import type { BlogPost, SiteSettings } from '../../../types/blog';
 import { BLOG_CMS_SOURCE, CACHE_CONFIG, IMAGE_PROXY_CONFIG } from '../config/cmsSource';
+import { fetchJson, fetchText } from './cmsHttp';
+import { resolveCmsSourceFromEnv } from './cmsSourceResolver';
+import type { CmsSourceConfig } from '../types/cms';
 
-export interface CmsSourceConfig {
-  owner: string;
-  repo: string;
-  branch?: string;
-}
+export type { CmsSourceConfig } from '../types/cms';
 
-const GITHUB_OWNER = BLOG_CMS_SOURCE.owner;
-const GITHUB_REPO = BLOG_CMS_SOURCE.repo;
-const GITHUB_BRANCH = BLOG_CMS_SOURCE.branch ?? 'content';
+const DEFAULT_CMS_SOURCE = resolveCmsSourceFromEnv(BLOG_CMS_SOURCE);
+const DEFAULT_CMS_BRANCH = DEFAULT_CMS_SOURCE.branch ?? 'content';
 const GITHUB_BASE_PATH = 'content';
 
 const CONTENT_FOLDER = 'posts';
@@ -17,17 +15,9 @@ const SETTINGS_PATH = 'data/settings.json';
 // const CONTENT_IMAGE_PROXY = IMAGE_PROXY_CONFIG.proxy;
 const CONTENT_IMAGE_QUALITY = IMAGE_PROXY_CONFIG.quality;
 const CONTENT_IMAGE_WIDTH = IMAGE_PROXY_CONFIG.width;
-const SIMULATE_ALL_CDN_DOWN = import.meta.env.VITE_SIMULATE_ALL_CDN_DOWN === 'true';
 
-let latestContentRefCache: {
-  ref: string;
-  fetchedAt: number;
-} | null = null;
-
-let latestRefRequestWindowCache: {
-  startsAt: number;
-  hits: number;
-} | null = null;
+const latestContentRefCacheBySource = new Map<string, { ref: string; fetchedAt: number }>();
+const latestRefRequestWindowCacheBySource = new Map<string, { startsAt: number; hits: number }>();
 
 type JsDelivrFlatFileEntry = {
   name: string;
@@ -45,51 +35,53 @@ type GitHubBranchResponse = {
   };
 };
 
-const buildBranchApiUrl = () => {
-  return `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/branches/${encodeURIComponent(GITHUB_BRANCH)}`;
+const getSourceKey = (source: CmsSourceConfig): string => {
+  return `${source.owner}/${source.repo}@${source.branch ?? DEFAULT_CMS_BRANCH}`;
 };
 
-const buildRawUrl = (path: string, ref: string = GITHUB_BRANCH) => {
+const getSourceBranch = (source: CmsSourceConfig): string => {
+  return source.branch ?? DEFAULT_CMS_BRANCH;
+};
+
+const buildBranchApiUrl = (source: CmsSourceConfig) => {
+  return `https://api.github.com/repos/${source.owner}/${source.repo}/branches/${encodeURIComponent(getSourceBranch(source))}`;
+};
+
+const buildRawUrl = (
+  path: string,
+  source: CmsSourceConfig,
+  ref: string = getSourceBranch(source),
+) => {
   const encodedPath = path
     .split('/')
     .map((segment) => encodeURIComponent(segment))
     .join('/');
 
-  return `https://cdn.jsdelivr.net/gh/${GITHUB_OWNER}/${GITHUB_REPO}@${encodeURIComponent(ref)}/${encodedPath}`;
+  return `https://cdn.jsdelivr.net/gh/${source.owner}/${source.repo}@${encodeURIComponent(ref)}/${encodedPath}`;
 };
 
-const buildGitHubRawUrl = (path: string, ref: string = GITHUB_BRANCH) => {
+const buildGitHubRawUrl = (
+  path: string,
+  source: CmsSourceConfig,
+  ref: string = getSourceBranch(source),
+) => {
   const encodedPath = path
     .split('/')
     .map((segment) => encodeURIComponent(segment))
     .join('/');
 
-  return `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${encodeURIComponent(ref)}/${encodedPath}`;
+  return `https://raw.githubusercontent.com/${source.owner}/${source.repo}/${encodeURIComponent(ref)}/${encodedPath}`;
 };
 
-const buildJsDelivrFlatApiUrl = (ref: string = GITHUB_BRANCH) => {
-  return `https://data.jsdelivr.com/v1/package/gh/${GITHUB_OWNER}/${GITHUB_REPO}@${encodeURIComponent(ref)}/flat`;
+const buildJsDelivrFlatApiUrl = (
+  source: CmsSourceConfig,
+  ref: string = getSourceBranch(source),
+) => {
+  return `https://data.jsdelivr.com/v1/package/gh/${source.owner}/${source.repo}@${encodeURIComponent(ref)}/flat`;
 };
 
 const isAbsoluteHttpUrl = (value: string) => {
   return value.startsWith('http://') || value.startsWith('https://');
-};
-
-const CDN_HOSTS = new Set([
-  'cdn.jsdelivr.net',
-  'data.jsdelivr.com',
-  'raw.githubusercontent.com',
-  'images.weserv.nl',
-  'cdn.statically.io',
-]);
-
-const isCdnUrl = (url: string): boolean => {
-  try {
-    const parsedUrl = new URL(url);
-    return CDN_HOSTS.has(parsedUrl.host);
-  } catch {
-    return false;
-  }
 };
 
 const buildWeservUrl = (sourceUrl: string): string => {
@@ -135,7 +127,10 @@ const toOptimizedImageUrl = (sourceUrl: string): string => {
   }
 };
 
-export const resolveContentAssetUrl = (assetPath: string): string => {
+export const resolveContentAssetUrl = (
+  assetPath: string,
+  source: CmsSourceConfig = DEFAULT_CMS_SOURCE,
+): string => {
   const trimmedPath = assetPath.trim();
 
   if (trimmedPath.length === 0) {
@@ -146,13 +141,16 @@ export const resolveContentAssetUrl = (assetPath: string): string => {
     const normalized = trimmedPath.replace(/^\/+/, '');
     const prefixedPath = normalized.startsWith('assets/') ? `public/${normalized}` : normalized;
 
-    return toOptimizedImageUrl(buildRawUrl(prefixedPath));
+    return toOptimizedImageUrl(buildRawUrl(prefixedPath, source));
   }
 
   return toOptimizedImageUrl(trimmedPath);
 };
 
-export function resolveCmsImageUrl(imagePath: string | undefined, source: CmsSourceConfig): string {
+export function resolveCmsImageUrl(
+  imagePath: string | undefined,
+  source: CmsSourceConfig = DEFAULT_CMS_SOURCE,
+): string {
   if (!imagePath) {
     return '/images/placeholder-blog.jpg';
   }
@@ -166,7 +164,7 @@ export function resolveCmsImageUrl(imagePath: string | undefined, source: CmsSou
     ? `/public${normalizedPath}`
     : normalizedPath;
 
-  const cdnUrl = `https://cdn.jsdelivr.net/gh/${source.owner}/${source.repo}@${source.branch ?? 'main'}${repoAssetPath}`;
+  const cdnUrl = `https://cdn.jsdelivr.net/gh/${source.owner}/${source.repo}@${getSourceBranch(source)}${repoAssetPath}`;
   return toOptimizedImageUrl(cdnUrl);
 }
 
@@ -178,36 +176,12 @@ const parseJsonContent = <T>(rawText: string, sourcePath: string): T => {
   }
 };
 
-const fetchJson = async <T>(url: string): Promise<T> => {
-  if (SIMULATE_ALL_CDN_DOWN && isCdnUrl(url)) {
-    throw new Error(`Simulated CDN outage for ${url}`);
-  }
-
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(`Request failed (${response.status}) to ${url}`);
-  }
-
-  return (await response.json()) as T;
-};
-
-const fetchText = async (url: string): Promise<string> => {
-  if (SIMULATE_ALL_CDN_DOWN && isCdnUrl(url)) {
-    throw new Error(`Simulated CDN outage for ${url}`);
-  }
-
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(`Request failed (${response.status}) to ${url}`);
-  }
-
-  return response.text();
-};
-
-const getLatestContentRef = async (): Promise<string> => {
+const getLatestContentRef = async (source: CmsSourceConfig): Promise<string> => {
+  const sourceKey = getSourceKey(source);
+  const sourceBranch = getSourceBranch(source);
   const now = Date.now();
+  const latestContentRefCache = latestContentRefCacheBySource.get(sourceKey);
+  const latestRefRequestWindowCache = latestRefRequestWindowCacheBySource.get(sourceKey);
 
   if (
     latestContentRefCache &&
@@ -223,13 +197,15 @@ const getLatestContentRef = async (): Promise<string> => {
     !latestRefRequestWindowCache ||
     now - latestRefRequestWindowCache.startsAt >= windowMs
   ) {
-    latestRefRequestWindowCache = {
+    latestRefRequestWindowCacheBySource.set(sourceKey, {
       startsAt: now,
       hits: 0,
-    };
+    });
   }
 
-  if (latestRefRequestWindowCache.hits >= maxHits) {
+  const currentWindowCache = latestRefRequestWindowCacheBySource.get(sourceKey);
+
+  if (currentWindowCache && currentWindowCache.hits >= maxHits) {
     if (latestContentRefCache) {
       return latestContentRefCache.ref;
     }
@@ -237,45 +213,52 @@ const getLatestContentRef = async (): Promise<string> => {
     console.warn(
       `Latest ref API hit limit reached (${maxHits}/hour), fallback to branch ref`,
     );
-    return GITHUB_BRANCH;
+    return sourceBranch;
   }
 
-  latestRefRequestWindowCache.hits += 1;
+  if (currentWindowCache) {
+    currentWindowCache.hits += 1;
+    latestRefRequestWindowCacheBySource.set(sourceKey, currentWindowCache);
+  }
 
   try {
-    const branchResponse = await fetchJson<GitHubBranchResponse>(buildBranchApiUrl());
+    const branchResponse = await fetchJson<GitHubBranchResponse>(buildBranchApiUrl(source));
     const ref = branchResponse.commit.sha;
 
-    latestContentRefCache = {
+    latestContentRefCacheBySource.set(sourceKey, {
       ref,
       fetchedAt: now,
-    };
+    });
 
     return ref;
   } catch (error) {
     console.warn('Failed to resolve latest commit SHA, fallback to branch ref', error);
-    return GITHUB_BRANCH;
+    return sourceBranch;
   }
 };
 
-const getDetailByRawPath = async <T>(path: string, ref?: string): Promise<T> => {
-  const targetRef = ref ?? (await getLatestContentRef());
+const getDetailByRawPath = async <T>(
+  path: string,
+  source: CmsSourceConfig,
+  ref?: string,
+): Promise<T> => {
+  const targetRef = ref ?? (await getLatestContentRef(source));
 
   try {
-    const rawUrl = buildRawUrl(path, targetRef);
+    const rawUrl = buildRawUrl(path, source, targetRef);
     const rawText = await fetchText(rawUrl);
 
     return parseJsonContent<T>(rawText, path);
   } catch (error) {
     console.warn('Failed to fetch detail from jsDelivr, fallback to GitHub raw', error);
-    const rawText = await fetchText(buildGitHubRawUrl(path, targetRef));
+    const rawText = await fetchText(buildGitHubRawUrl(path, source, targetRef));
     return parseJsonContent<T>(rawText, path);
   }
 };
 
-export async function fetchPosts(): Promise<BlogPost[]> {
-  const latestRef = await getLatestContentRef();
-  const response = await fetchJson<JsDelivrFlatResponse>(buildJsDelivrFlatApiUrl(latestRef));
+export async function fetchPosts(source: CmsSourceConfig = DEFAULT_CMS_SOURCE): Promise<BlogPost[]> {
+  const latestRef = await getLatestContentRef(source);
+  const response = await fetchJson<JsDelivrFlatResponse>(buildJsDelivrFlatApiUrl(source, latestRef));
 
   const folderPath = `${GITHUB_BASE_PATH}/${CONTENT_FOLDER}`.replace(/^\/+|\/+$/g, '');
   const folderPrefix = `/${folderPath}/`;
@@ -287,14 +270,17 @@ export async function fetchPosts(): Promise<BlogPost[]> {
   const posts = await Promise.all(
     postFiles.map(async (file) => {
       const normalizedPath = file.name.replace(/^\/+/, '');
-      return getDetailByRawPath<BlogPost>(normalizedPath, latestRef);
+      return getDetailByRawPath<BlogPost>(normalizedPath, source, latestRef);
     }),
   );
 
   return posts;
 }
 
-export async function fetchPostBySlug(slug: string): Promise<BlogPost> {
+export async function fetchPostBySlug(
+  slug: string,
+  source: CmsSourceConfig = DEFAULT_CMS_SOURCE,
+): Promise<BlogPost> {
   const safeSlug = slug.trim();
 
   if (!safeSlug) {
@@ -302,10 +288,10 @@ export async function fetchPostBySlug(slug: string): Promise<BlogPost> {
   }
 
   const path = `${GITHUB_BASE_PATH}/${CONTENT_FOLDER}/${safeSlug}.json`;
-  const latestRef = await getLatestContentRef();
+  const latestRef = await getLatestContentRef(source);
 
   try {
-    return await getDetailByRawPath<BlogPost>(path, latestRef);
+    return await getDetailByRawPath<BlogPost>(path, source, latestRef);
   } catch (error) {
     if (error instanceof Error && error.message.includes('404')) {
       throw new Error('Artikel tidak ditemukan.');
@@ -314,8 +300,10 @@ export async function fetchPostBySlug(slug: string): Promise<BlogPost> {
   }
 }
 
-export async function fetchSiteSettings(): Promise<SiteSettings> {
+export async function fetchSiteSettings(
+  source: CmsSourceConfig = DEFAULT_CMS_SOURCE,
+): Promise<SiteSettings> {
   const path = SETTINGS_PATH;
-  const latestRef = await getLatestContentRef();
-  return getDetailByRawPath<SiteSettings>(path, latestRef);
+  const latestRef = await getLatestContentRef(source);
+  return getDetailByRawPath<SiteSettings>(path, source, latestRef);
 }

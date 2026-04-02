@@ -1,4 +1,4 @@
-import type { CmsSourceConfig } from '../services/cms';
+import type { CmsSourceConfig } from '../types/cms';
 
 export const BLOG_CMS_SOURCE: CmsSourceConfig = {
   owner: 'pengikut-raja-capybara',

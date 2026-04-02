@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useMemo, useState, type ImgHTMLAttributes } from 'react';
-import type { CmsSourceConfig } from '../../features/blog/services/cms';
+import type { CmsSourceConfig } from '../../features/blog/types/cms';
 
 type CdnImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src'> & {
   src?: string;

@@ -70,7 +70,7 @@ describe('BlogDetail', () => {
     renderDetail('/blog/strategi-sungai-raja-capybara', queryClient);
 
     expect(await screen.findByRole('heading', { name: post.title })).toBeTruthy();
-    expect(mockFetchPostBySlug).toHaveBeenCalledWith(post.slug);
+    expect(mockFetchPostBySlug).toHaveBeenCalledWith(post.slug, BLOG_CMS_SOURCE);
   });
 
   it('merender body markdown menjadi HTML', async () => {

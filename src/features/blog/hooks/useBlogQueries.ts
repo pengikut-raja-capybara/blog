@@ -4,15 +4,15 @@ import {
   fetchPostBySlug,
   fetchPosts,
   fetchSiteSettings,
-  type CmsSourceConfig,
 } from '../services/cms';
 import { blogQueryKeys } from '../services/queryKeys';
 import type { BlogPost, SiteSettings } from '../../../types/blog';
+import type { CmsSourceConfig } from '../types/cms';
 
 export function useBlogPostsQuery(source: CmsSourceConfig = BLOG_CMS_SOURCE) {
   return useQuery<BlogPost[]>({
     queryKey: blogQueryKeys.posts(source),
-    queryFn: () => fetchPosts(),
+    queryFn: () => fetchPosts(source),
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -20,7 +20,7 @@ export function useBlogPostsQuery(source: CmsSourceConfig = BLOG_CMS_SOURCE) {
 export function useSiteSettingsQuery(source: CmsSourceConfig = BLOG_CMS_SOURCE) {
   return useQuery<SiteSettings>({
     queryKey: blogQueryKeys.settings(source),
-    queryFn: () => fetchSiteSettings(),
+    queryFn: () => fetchSiteSettings(source),
     staleTime: 30 * 60 * 1000,
   });
 }
@@ -35,7 +35,7 @@ export function useBlogPostQuery(
 
   return useQuery<BlogPost>({
     queryKey: blogQueryKeys.post(source, slug),
-    queryFn: () => fetchPostBySlug(slug ?? ''),
+    queryFn: () => fetchPostBySlug(slug ?? '', source),
     enabled: Boolean(slug) && !cachedPost,
     initialData: cachedPost,
     staleTime: 5 * 60 * 1000,
