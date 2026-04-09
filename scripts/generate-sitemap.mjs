@@ -6,7 +6,7 @@ const CONTENT_OWNER = (process.env.CONTENT_OWNER ?? 'pengikut-raja-capybara').tr
 const CONTENT_REPO = (process.env.CONTENT_REPO ?? 'blog').trim();
 const CONTENT_BRANCH = (process.env.CONTENT_BRANCH ?? 'content').trim();
 const CONTENT_POSTS_PATH = trimSlashes(process.env.CONTENT_POSTS_PATH ?? 'content/posts');
-const OUTPUT_PATH = process.env.SITEMAP_OUTPUT_PATH ?? 'sitemap.xml';
+const OUTPUT_PATH = process.env.SITEMAP_OUTPUT_PATH ?? 'dist/sitemap.xml';
 
 const githubHeaders = {
   Accept: 'application/vnd.github+json',
