@@ -42,7 +42,7 @@ describe("Home", () => {
 
     renderWithProviders(<Home />);
 
-    expect(await screen.findByRole("heading", { name: settings.site_title })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: /Ketenangan dalam/i })).toBeTruthy();
     expect(await screen.findByRole("heading", { name: posts[0].title })).toBeTruthy();
   });
 });

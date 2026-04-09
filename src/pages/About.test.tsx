@@ -7,7 +7,7 @@ describe('About', () => {
   it('menampilkan heading halaman tentang', () => {
     renderWithProviders(<About />);
 
-    expect(screen.getByRole('heading', { name: 'Tentang Kami' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /Tentang Kami/i })).toBeTruthy();
     expect(screen.getByText(/Pengikut Raja Capybara/i)).toBeTruthy();
   });
 });

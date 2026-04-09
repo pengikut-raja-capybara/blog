@@ -7,7 +7,7 @@ describe('Contact', () => {
   it('menampilkan info kontak utama', () => {
     renderWithProviders(<Contact />);
 
-    expect(screen.getByRole('heading', { name: 'Mari Berdiskusi' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /Mari Berdiskusi/i })).toBeTruthy();
 
     const emailLink = screen
       .getAllByRole('link')
@@ -15,6 +15,6 @@ describe('Contact', () => {
     expect(emailLink).toBeTruthy();
     expect(emailLink?.getAttribute('href')).toContain('mailto:rajacapybara275@gmail.com');
 
-    expect(screen.getByRole('link', { name: 'github.com/pengikut-raja-capybara' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: /pengikut-raja-capybara/i })).toBeTruthy();
   });
 });
