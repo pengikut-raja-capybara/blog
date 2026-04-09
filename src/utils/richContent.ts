@@ -4,7 +4,12 @@ import { resolveCmsImageUrl } from '../features/blog/services/cms';
 import type { CmsSourceConfig } from '../features/blog/types/cms';
 import type { BlogBody } from '../types/blog';
 
-const HTML_TAG_PATTERN = /<\/?[a-z][\s\S]*>/i;
+/**
+ * Block-level HTML tags that signal a content string is genuinely HTML.
+ * We only treat content as HTML if it begins with one of these.
+ * This avoids false-positives where a markdown article *mentions* HTML tags.
+ */
+const HTML_BLOCK_START_PATTERN = /^\s*<(p|div|h[1-6]|ul|ol|li|blockquote|pre|code|table|article|section|header|footer|nav|main|figure|aside|details|summary|br|hr|img|a)\b/i;
 
 export type ContentFormat = 'markdown' | 'html';
 
@@ -240,7 +245,10 @@ export function detectContentFormat(body: string): ContentFormat {
     return 'markdown';
   }
 
-  return HTML_TAG_PATTERN.test(content) ? 'html' : 'markdown';
+  // Only treat as HTML if content actually *starts* with a block-level HTML tag.
+  // Markdown posts that merely *mention* HTML tags (e.g. tutorials about HTML)
+  // should still be parsed as markdown.
+  return HTML_BLOCK_START_PATTERN.test(content) ? 'html' : 'markdown';
 }
 
 export function extractMarkdownBody(body: BlogBody): string | null {

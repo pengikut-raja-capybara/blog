@@ -92,7 +92,7 @@ describe('BlogDetail', () => {
     renderDetail('/blog/markdown-raja-capybara', queryClient);
 
     expect(await screen.findByRole('heading', { name: post.title })).toBeTruthy();
-    expect(screen.getByText('Subjudul Markdown')).toBeTruthy();
+    expect(screen.getAllByText('Subjudul Markdown').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole('link', { name: 'Tautan' }).getAttribute('href')).toBe(
       'https://example.com',
     );
@@ -119,7 +119,7 @@ describe('BlogDetail', () => {
     const { container } = renderDetail('/blog/html-raja-capybara', queryClient);
 
     expect(await screen.findByRole('heading', { name: post.title })).toBeTruthy();
-    expect(screen.getByText('Subjudul HTML')).toBeTruthy();
+    expect(screen.getAllByText('Subjudul HTML').length).toBeGreaterThanOrEqual(1);
     expect(container.querySelector('script')).toBeNull();
   });
 
@@ -161,7 +161,7 @@ describe('BlogDetail', () => {
     renderDetail('/blog/rich-text-raja-capybara', queryClient);
 
     expect(await screen.findByRole('heading', { name: post.title })).toBeTruthy();
-    expect(screen.getByText('Subjudul JSON')).toBeTruthy();
+    expect(screen.getAllByText('Subjudul JSON').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('tebal').tagName).toBe('STRONG');
   });
 });
