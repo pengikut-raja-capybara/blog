@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/blog/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/blog/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/blog/favicon-16x16.png" />
+    <link rel="manifest" href="/blog/site.webmanifest" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-7R4CWTBN3M"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { window.dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', 'G-7R4CWTBN3M', { send_page_view: false });
+    </script>
+    <script>
+      (function () {
+        const basePath = '/blog';
+        const currentUrl = new URL(window.location.href);
+        const redirectFromQuery = currentUrl.searchParams.get('p');
+        const redirectFromStorage = sessionStorage.getItem('spa-redirect');
+        const redirect = redirectFromQuery || redirectFromStorage;
+
+        if (!redirect) {
+          return;
+        }
+
+        sessionStorage.removeItem('spa-redirect');
+
+        const target = new URL(redirect, window.location.origin);
+        const normalizedPath = target.pathname.startsWith(basePath + '/') || target.pathname === basePath
+          ? target.pathname
+          : `${basePath}${target.pathname.startsWith('/') ? target.pathname : `/${target.pathname}`}`;
+
+        if (redirectFromQuery) {
+          currentUrl.searchParams.delete('p');
+          const remainingQuery = currentUrl.searchParams.toString();
+          const queryPart = remainingQuery ? `?${remainingQuery}` : '';
+          window.history.replaceState(null, '', `${normalizedPath}${target.search || queryPart}${target.hash}`);
+          return;
+        }
+
+        window.history.replaceState(null, '', `${normalizedPath}${target.search}${target.hash}`);
+      })();
+    </script>
+    <script type="module" crossorigin src="/blog/assets/index-BCRhdmat.js"></script>
+    <link rel="stylesheet" crossorigin href="/blog/assets/index-D4difgj_.css">
+      <!-- route-seo:start -->
+    <title>Transformasi Belajar dan Bekerja: Panduan Memaksimalkan NotebookLM | Pengikut Raja Capybara</title>
+    <meta name="description" content="Kita sering kali kewalahan menghadapi lautan informasi—mulai dari laporan, artikel panjang, hingga transkrip rapat. Di sinilah NotebookLM hadir sebagai asisten riset bertenaga AI yang dirancang khusus untuk membantu Anda menyempurnakan dan mengatur ide-ide Anda. Alih-alih menjadi *chatbot* umum, aplikasi ini memungkinkan Anda membangun pusat pengetahuan pribadi di mana AI bertindak sebagai pakar yang sepenuhnya memahami detail proyek Anda. Dengan NotebookLM, Anda diajak untuk bekerja lebih cerdas, bukan lebih keras." />
+    <meta property="og:locale" content="id_ID" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Transformasi Belajar dan Bekerja: Panduan Memaksimalkan NotebookLM | Pengikut Raja Capybara" />
+    <meta property="og:description" content="Kita sering kali kewalahan menghadapi lautan informasi—mulai dari laporan, artikel panjang, hingga transkrip rapat. Di sinilah NotebookLM hadir sebagai asisten riset bertenaga AI yang dirancang khusus untuk membantu Anda menyempurnakan dan mengatur ide-ide Anda. Alih-alih menjadi *chatbot* umum, aplikasi ini memungkinkan Anda membangun pusat pengetahuan pribadi di mana AI bertindak sebagai pakar yang sepenuhnya memahami detail proyek Anda. Dengan NotebookLM, Anda diajak untuk bekerja lebih cerdas, bukan lebih keras." />
+    <meta property="og:url" content="https://pengikut-raja-capybara.github.io/blog/panduan-notebookllm" />
+    <meta property="og:site_name" content="Pengikut Raja Capybara" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Transformasi Belajar dan Bekerja: Panduan Memaksimalkan NotebookLM | Pengikut Raja Capybara" />
+    <meta name="twitter:description" content="Kita sering kali kewalahan menghadapi lautan informasi—mulai dari laporan, artikel panjang, hingga transkrip rapat. Di sinilah NotebookLM hadir sebagai asisten riset bertenaga AI yang dirancang khusus untuk membantu Anda menyempurnakan dan mengatur ide-ide Anda. Alih-alih menjadi *chatbot* umum, aplikasi ini memungkinkan Anda membangun pusat pengetahuan pribadi di mana AI bertindak sebagai pakar yang sepenuhnya memahami detail proyek Anda. Dengan NotebookLM, Anda diajak untuk bekerja lebih cerdas, bukan lebih keras." />
+    <link rel="canonical" href="https://pengikut-raja-capybara.github.io/blog/panduan-notebookllm" />
+    <meta property="og:image" content="https://cdn.jsdelivr.net/gh/pengikut-raja-capybara/blog@content/public/images/7a583392-0237-4fb6-b83c-b013e2d9af8d.jpg" />
+    <meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/pengikut-raja-capybara/blog@content/public/images/7a583392-0237-4fb6-b83c-b013e2d9af8d.jpg" />
+    <!-- route-seo:end -->
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
