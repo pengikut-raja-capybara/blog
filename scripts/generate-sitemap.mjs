@@ -91,12 +91,6 @@ function buildSitemapXml(urlEntries) {
     if (entry.lastmod) {
       lines.push(`    <lastmod>${escapeXml(entry.lastmod)}</lastmod>`);
     }
-    if (entry.changefreq) {
-      lines.push(`    <changefreq>${entry.changefreq}</changefreq>`);
-    }
-    if (entry.priority) {
-      lines.push(`    <priority>${entry.priority}</priority>`);
-    }
     lines.push('  </url>');
   }
 
@@ -108,38 +102,32 @@ function buildSitemapXml(urlEntries) {
 
 async function main() {
   const files = await getPostFileEntries();
+  const today = new Date().toISOString().split('T')[0];
+  
   const posts = files
     .map((entry) => parseSlugFromFileName(entry.name))
     .filter(Boolean)
     .map((slug) => ({
       slug,
-      lastmod: null,
+      lastmod: today,
     }));
 
   const urls = [
     {
       loc: buildUrl(`${APP_BASE_PATH}/`),
-      changefreq: 'daily',
-      priority: '1.0',
-      lastmod: null,
+      lastmod: today,
     },
     {
       loc: buildUrl(`${APP_BASE_PATH}/about`),
-      changefreq: 'monthly',
-      priority: '0.7',
-      lastmod: null,
+      lastmod: today,
     },
     {
       loc: buildUrl(`${APP_BASE_PATH}/contact`),
-      changefreq: 'monthly',
-      priority: '0.6',
-      lastmod: null,
+      lastmod: today,
     },
     ...posts
       .map((post) => ({
         loc: buildUrl(`${APP_BASE_PATH}/${encodeURIComponent(post.slug)}`),
-        changefreq: 'weekly',
-        priority: '0.8',
         lastmod: post.lastmod,
       }))
       .sort((a, b) => a.loc.localeCompare(b.loc)),
