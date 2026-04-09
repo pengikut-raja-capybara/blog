@@ -36,7 +36,9 @@ function normalizeSiteUrl(value) {
 
 function buildUrl(pathname) {
   const base = normalizeSiteUrl(SITE_URL);
-  return `${base}${pathname.startsWith('/') ? pathname : `/${pathname}`}`;
+  const normalizedPath = pathname.startsWith('/') ? pathname : `/${pathname}`;
+  const pathWithSlash = normalizedPath.endsWith('/') ? normalizedPath : `${normalizedPath}/`;
+  return `${base}${pathWithSlash}`;
 }
 
 async function fetchJson(url, options = {}) {

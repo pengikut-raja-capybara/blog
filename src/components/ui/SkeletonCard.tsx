@@ -16,9 +16,10 @@ export function SkeletonCard() {
             <div className="h-4 w-4/5 rounded bg-tan/20 dark:bg-dark-bg-light/30" />
           </div>
 
-          <div className="flex gap-2">
-            <div className="h-6 w-16 rounded-full bg-tan/20 dark:bg-dark-bg-light/30" />
-            <div className="h-6 w-20 rounded-full bg-tan/20 dark:bg-dark-bg-light/30" />
+          <div className="flex gap-1.5 overflow-hidden max-h-[22px]">
+            <div className="h-[20px] w-14 rounded-full bg-tan/20 dark:bg-dark-bg-light/30" />
+            <div className="h-[20px] w-16 rounded-full bg-tan/20 dark:bg-dark-bg-light/30" />
+            <div className="h-[20px] w-12 rounded-full bg-tan/20 dark:bg-dark-bg-light/30" />
           </div>
 
           <div className="mt-auto flex items-center justify-between border-t border-tan/20 dark:border-dark-bg-light/30 pt-3">
@@ -33,7 +34,7 @@ export function SkeletonCard() {
 
 export function SkeletonGrid({ count = 6 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
       {Array.from({ length: count }).map((_, i) => (
         <div key={i} className="h-full">
           <SkeletonCard />

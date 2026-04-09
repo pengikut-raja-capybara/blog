@@ -176,9 +176,26 @@ function BlogDetail() {
   // Related Posts
   const relatedPosts = useMemo(() => {
     if (!allPostsQuery.data || !post) return [];
+    
+    const targetTags = new Set(post.tags || []);
+    
     return allPostsQuery.data
       .filter((p) => p.slug !== post.slug)
-      .slice(0, 3);
+      .map((p) => {
+        // Hitung irisan (intersection) tag yang sama
+        const score = (p.tags || []).filter(tag => targetTags.has(tag)).length;
+        return { post: p, score };
+      })
+      .sort((a, b) => {
+        // Prioritaskan skor tag tertinggi
+        if (a.score !== b.score) {
+          return b.score - a.score;
+        }
+        // Jika skor sama, urutkan berdasarkan yang terbaru
+        return new Date(b.post.date).getTime() - new Date(a.post.date).getTime();
+      })
+      .slice(0, 3)
+      .map(item => item.post);
   }, [allPostsQuery.data, post]);
 
   const scrollToHeading = useCallback((id: string) => {

@@ -25,7 +25,7 @@ function BlogCard({
     month: 'long',
     year: 'numeric',
   });
-  const displayedTags = tags.slice(0, 2); // Tampilkan maksimal 2 tag untuk menjaga tampilan tetap rapi
+  const safeTags = Array.isArray(tags) && tags.length > 0 ? tags : ['Catatan'];
 
   return (
     <article className="group flex h-full overflow-hidden rounded-2xl border border-tan/20 bg-gradient-to-b from-cream to-cream/80 shadow-sm transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-dark/10 dark:border-dark-bg-light/30 dark:from-dark-bg-light dark:to-dark-bg dark:hover:shadow-dark-bg-light/30">
@@ -54,18 +54,17 @@ function BlogCard({
             {excerpt}
           </p>
 
-          {displayedTags.length > 0 ? (
-            <ul className="flex flex-wrap gap-2">
-              {displayedTags.map((tag) => (
-                <li
-                  key={tag}
-                  className="rounded-full border border-tan/20 dark:border-dark-bg-light/30 bg-cream/80 dark:bg-dark-bg-light/20 px-2.5 py-1 text-[11px] font-medium text-dark/70 dark:text-dark-text/70"
-                >
-                  #{tag}
-                </li>
-              ))}
-            </ul>
-          ) : null}
+          <ul className="flex flex-wrap gap-1.5 overflow-hidden max-h-[22px]">
+            {safeTags.map((tag) => (
+              <li
+                key={tag}
+                className="truncate rounded-full border border-tan/20 dark:border-dark-bg-light/30 bg-cream/80 dark:bg-dark-bg-light/20 px-2 py-0.5 text-[10px] font-medium text-dark/70 dark:text-dark-text/70"
+                style={{ maxWidth: '120px' }}
+              >
+                #{tag}
+              </li>
+            ))}
+          </ul>
 
           <div className="mt-auto flex items-center justify-between gap-3 border-t border-tan/20 pt-3 text-[11px] text-dark/50 dark:border-dark-bg-light/30 dark:text-dark-text/50">
             <time className="block font-medium" dateTime={date}>

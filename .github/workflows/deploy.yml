@@ -3,7 +3,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: ['main']
+    branches: ["main"]
   workflow_dispatch:
 
 permissions:
@@ -26,29 +26,6 @@ jobs:
 
       - name: Build
         run: bun run build
-
-      - name: Generate sitemap
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SITE_URL: ${{ vars.SITE_URL }}
-          APP_BASE_PATH: /blog
-          CONTENT_OWNER: pengikut-raja-capybara
-          CONTENT_REPO: blog
-          CONTENT_BRANCH: content
-          CONTENT_POSTS_PATH: content/posts
-          SITEMAP_OUTPUT_PATH: dist/sitemap.xml
-        run: node scripts/generate-sitemap.mjs
-
-      - name: Generate SPA route files
-        env:
-          SITE_URL: ${{ vars.SITE_URL }}
-          APP_BASE_PATH: /blog
-          CONTENT_OWNER: pengikut-raja-capybara
-          CONTENT_REPO: blog
-          CONTENT_BRANCH: content
-          CONTENT_POSTS_PATH: content/posts
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: bun run spa:routes
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v3
