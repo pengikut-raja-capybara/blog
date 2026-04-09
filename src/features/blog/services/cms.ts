@@ -8,10 +8,6 @@ export type { CmsSourceConfig } from '../types/cms';
 
 const DEFAULT_CMS_SOURCE = resolveCmsSourceFromEnv(BLOG_CMS_SOURCE);
 const DEFAULT_CMS_BRANCH = DEFAULT_CMS_SOURCE.branch ?? 'content';
-const GITHUB_BASE_PATH = 'content';
-
-const CONTENT_FOLDER = 'posts';
-const SETTINGS_PATH = 'data/settings.json';
 // const CONTENT_IMAGE_PROXY = IMAGE_PROXY_CONFIG.proxy;
 const CONTENT_IMAGE_QUALITY = IMAGE_PROXY_CONFIG.quality;
 const CONTENT_IMAGE_WIDTH = IMAGE_PROXY_CONFIG.width;
@@ -256,54 +252,102 @@ const getDetailByRawPath = async <T>(
   }
 };
 
+/**
+ * CmsFetcher is a reusable module to fetch JSON contents from a GitHub repository
+ * using JsDelivr and GitHub raw API.
+ */
+export class CmsFetcher {
+  defaultSource: CmsSourceConfig;
+  basePath: string;
+
+  constructor(defaultSource: CmsSourceConfig, basePath: string = 'content') {
+    this.defaultSource = defaultSource;
+    this.basePath = basePath;
+  }
+
+  /**
+   * Fetches all JSON files inside a specific folder within the base path.
+   */
+  async fetchCollection<T>(folder: string, source: CmsSourceConfig = this.defaultSource): Promise<T[]> {
+    const latestRef = await getLatestContentRef(source);
+    const response = await fetchJson<JsDelivrFlatResponse>(buildJsDelivrFlatApiUrl(source, latestRef));
+
+    const folderPath = `${this.basePath}/${folder}`.replace(/^\/+|\/+$/g, '');
+    const folderPrefix = `/${folderPath}/`;
+
+    const entryFiles = response.files
+      .filter((entry) => entry.name.startsWith(folderPrefix) && entry.name.endsWith('.json'))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    const items = await Promise.all(
+      entryFiles.map(async (file) => {
+        const normalizedPath = file.name.replace(/^\/+/, '');
+        return getDetailByRawPath<T>(normalizedPath, source, latestRef);
+      }),
+    );
+
+    return items;
+  }
+
+  /**
+   * Fetches a specific JSON file based on its slug inside the given folder.
+   */
+  async fetchEntry<T>(folder: string, slug: string, source: CmsSourceConfig = this.defaultSource): Promise<T> {
+    const safeSlug = slug.trim();
+
+    if (!safeSlug) {
+      throw new Error('Invalid entry slug.');
+    }
+
+    const folderPath = `${this.basePath}/${folder}`.replace(/^\/+|\/+$/g, '');
+    const path = `${folderPath}/${safeSlug}.json`;
+    const latestRef = await getLatestContentRef(source);
+
+    try {
+      return await getDetailByRawPath<T>(path, source, latestRef);
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('404')) {
+        throw new Error('Konten tidak ditemukan.');
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Fetches a specific JSON file given its relative path.
+   */
+  async fetchFile<T>(path: string, source: CmsSourceConfig = this.defaultSource): Promise<T> {
+    const latestRef = await getLatestContentRef(source);
+    return getDetailByRawPath<T>(path, source, latestRef);
+  }
+}
+
+// -----------------------------------------------------
+// Legacy / Current Blog Specific Exports
+// -----------------------------------------------------
+
+export const blogCmsFetcher = new CmsFetcher(DEFAULT_CMS_SOURCE, 'content');
+
 export async function fetchPosts(source: CmsSourceConfig = DEFAULT_CMS_SOURCE): Promise<BlogPost[]> {
-  const latestRef = await getLatestContentRef(source);
-  const response = await fetchJson<JsDelivrFlatResponse>(buildJsDelivrFlatApiUrl(source, latestRef));
-
-  const folderPath = `${GITHUB_BASE_PATH}/${CONTENT_FOLDER}`.replace(/^\/+|\/+$/g, '');
-  const folderPrefix = `/${folderPath}/`;
-
-  const postFiles = response.files
-    .filter((entry) => entry.name.startsWith(folderPrefix) && entry.name.endsWith('.json'))
-    .sort((a, b) => a.name.localeCompare(b.name));
-
-  const posts = await Promise.all(
-    postFiles.map(async (file) => {
-      const normalizedPath = file.name.replace(/^\/+/, '');
-      return getDetailByRawPath<BlogPost>(normalizedPath, source, latestRef);
-    }),
-  );
-
-  return posts;
+  return blogCmsFetcher.fetchCollection<BlogPost>('posts', source);
 }
 
 export async function fetchPostBySlug(
   slug: string,
   source: CmsSourceConfig = DEFAULT_CMS_SOURCE,
 ): Promise<BlogPost> {
-  const safeSlug = slug.trim();
-
-  if (!safeSlug) {
-    throw new Error('Invalid post slug.');
-  }
-
-  const path = `${GITHUB_BASE_PATH}/${CONTENT_FOLDER}/${safeSlug}.json`;
-  const latestRef = await getLatestContentRef(source);
-
   try {
-    return await getDetailByRawPath<BlogPost>(path, source, latestRef);
+    return await blogCmsFetcher.fetchEntry<BlogPost>('posts', slug, source);
   } catch (error) {
-    if (error instanceof Error && error.message.includes('404')) {
-      throw new Error('Artikel tidak ditemukan.');
-    }
-    throw error;
+     if (error instanceof Error && error.message.includes('tidak ditemukan')) {
+        throw new Error('Artikel tidak ditemukan.');
+     }
+     throw error;
   }
 }
 
 export async function fetchSiteSettings(
   source: CmsSourceConfig = DEFAULT_CMS_SOURCE,
 ): Promise<SiteSettings> {
-  const path = SETTINGS_PATH;
-  const latestRef = await getLatestContentRef(source);
-  return getDetailByRawPath<SiteSettings>(path, source, latestRef);
+  return blogCmsFetcher.fetchFile<SiteSettings>('data/settings.json', source);
 }
