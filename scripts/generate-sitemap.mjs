@@ -100,6 +100,10 @@ function buildSitemapXml(urlEntries) {
   return lines.join('\n');
 }
 
+function buildSitemapTxt(urlEntries) {
+  return urlEntries.map((entry) => entry.loc).join('\n') + '\n';
+}
+
 async function main() {
   const files = await getPostFileEntries();
   const today = new Date().toISOString().split('T')[0];
@@ -136,7 +140,13 @@ async function main() {
   const xml = buildSitemapXml(urls);
   await writeFile(OUTPUT_PATH, xml, 'utf8');
 
-  console.log(`Generated sitemap with ${urls.length} URLs -> ${OUTPUT_PATH}`);
+  const txt = buildSitemapTxt(urls);
+  const txtPath = OUTPUT_PATH.endsWith('.xml')
+    ? OUTPUT_PATH.slice(0, -4) + '.txt'
+    : `${OUTPUT_PATH}.txt`;
+  await writeFile(txtPath, txt, 'utf8');
+
+  console.log(`Generated sitemap with ${urls.length} URLs -> ${OUTPUT_PATH} and ${txtPath}`);
 }
 
 main().catch((error) => {
