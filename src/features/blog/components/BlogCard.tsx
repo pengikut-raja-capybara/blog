@@ -8,6 +8,7 @@ type BlogCardProps = Pick<
   'title' | 'excerpt' | 'date' | 'image' | 'slug' | 'tags' | 'author'
 > & {
   cmsSource?: CmsSourceConfig;
+  priority?: boolean;
 };
 
 function BlogCard({
@@ -19,6 +20,7 @@ function BlogCard({
   tags,
   author,
   cmsSource,
+  priority = false,
 }: BlogCardProps) {
   const formattedDate = new Date(date).toLocaleDateString('id-ID', {
     day: '2-digit',
@@ -38,8 +40,9 @@ function BlogCard({
             proxyWidth={480}
             proxyQuality={48}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-            loading="lazy"
-            decoding="async"
+            loading={priority ? 'eager' : 'lazy'}
+            fetchPriority={priority ? 'high' : 'auto'}
+            decoding={priority ? 'sync' : 'async'}
           />
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
         </div>

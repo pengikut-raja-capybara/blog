@@ -8,4 +8,18 @@ import { compression } from 'vite-plugin-compression2'
 export default defineConfig({
   plugins: [react(), tailwindcss(), ViteImageOptimizer(), compression()],
   base: process.env.GITHUB_ACTIONS ? "/blog/" : "/",
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react-router')) return 'router';
+            if (id.includes('react') || id.includes('react-dom')) return 'react';
+            if (id.includes('marked') || id.includes('dompurify')) return 'markdown';
+            return 'vendor';
+          }
+        }
+      }
+    }
+  }
 })

@@ -24,7 +24,7 @@
 	}
 
 	a {
-		@apply text-amber hover:text-tan transition-colors;
+		@apply text-light hover:text-dark transition-colors;
 	}
 
 	/* Dark mode - styles when .dark class is on html */
