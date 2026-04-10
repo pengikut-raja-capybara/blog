@@ -1,0 +1,10 @@
+https://pengikut-raja-capybara.github.io/blog/
+https://pengikut-raja-capybara.github.io/blog/about/
+https://pengikut-raja-capybara.github.io/blog/contact/
+https://pengikut-raja-capybara.github.io/blog/ilmu-pengetahuan-terbuka/
+https://pengikut-raja-capybara.github.io/blog/mengenal-git/
+https://pengikut-raja-capybara.github.io/blog/mengenal-javascript/
+https://pengikut-raja-capybara.github.io/blog/mengenal-reactjs/
+https://pengikut-raja-capybara.github.io/blog/panduan-belajar-html/
+https://pengikut-raja-capybara.github.io/blog/panduan-notebookllm/
+https://pengikut-raja-capybara.github.io/blog/pengikut-raja-capybara/

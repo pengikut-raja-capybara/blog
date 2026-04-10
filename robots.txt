@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://pengikut-raja-capybara.github.io/blog/sitemap.xml
+Sitemap: https://pengikut-raja-capybara.github.io/blog/sitemap.txt
