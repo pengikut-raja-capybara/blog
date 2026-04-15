@@ -1,6 +1,7 @@
 https://pengikut-raja-capybara.github.io/blog/
 https://pengikut-raja-capybara.github.io/blog/about/
 https://pengikut-raja-capybara.github.io/blog/contact/
+https://pengikut-raja-capybara.github.io/blog/3s-memanfaatkan-ai/
 https://pengikut-raja-capybara.github.io/blog/ilmu-pengetahuan-terbuka/
 https://pengikut-raja-capybara.github.io/blog/mengenal-git/
 https://pengikut-raja-capybara.github.io/blog/mengenal-javascript/

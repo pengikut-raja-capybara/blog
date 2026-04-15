@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/blog/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/blog/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/blog/favicon-16x16.png" />
+    <link rel="manifest" href="/blog/site.webmanifest" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://wsrv.nl" />
+    <link rel="preconnect" href="https://api.github.com" />
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-7R4CWTBN3M"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { window.dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', 'G-7R4CWTBN3M', { send_page_view: false });
+    </script>
+    <script>
+      (function () {
+        const basePath = '/blog';
+        const currentUrl = new URL(window.location.href);
+        const redirectFromQuery = currentUrl.searchParams.get('p');
+        const redirectFromStorage = sessionStorage.getItem('spa-redirect');
+        const redirect = redirectFromQuery || redirectFromStorage;
+
+        if (!redirect) {
+          return;
+        }
+
+        sessionStorage.removeItem('spa-redirect');
+
+        const target = new URL(redirect, window.location.origin);
+        const normalizedPath = target.pathname.startsWith(basePath + '/') || target.pathname === basePath
+          ? target.pathname
+          : `${basePath}${target.pathname.startsWith('/') ? target.pathname : `/${target.pathname}`}`;
+
+        if (redirectFromQuery) {
+          currentUrl.searchParams.delete('p');
+          const remainingQuery = currentUrl.searchParams.toString();
+          const queryPart = remainingQuery ? `?${remainingQuery}` : '';
+          window.history.replaceState(null, '', `${normalizedPath}${target.search || queryPart}${target.hash}`);
+          return;
+        }
+
+        window.history.replaceState(null, '', `${normalizedPath}${target.search}${target.hash}`);
+      })();
+    </script>
+    <script type="module" crossorigin src="/blog/assets/index-BNrKmmes.js"></script>
+    <link rel="modulepreload" crossorigin href="/blog/assets/rolldown-runtime-DF2fYuay.js">
+    <link rel="modulepreload" crossorigin href="/blog/assets/react-C9CjctqC.js">
+    <link rel="modulepreload" crossorigin href="/blog/assets/router-DNV6du-d.js">
+    <link rel="modulepreload" crossorigin href="/blog/assets/vendor-BWiwibr7.js">
+    <link rel="stylesheet" crossorigin href="/blog/assets/index-BcEskUuN.css">
+      <!-- route-seo:start -->
+    <title>Pola 3-S: Cara Efektif Memanfaatkan AI dalam Belajar dan Bekerja | Pengikut Raja Capybara</title>
+    <meta name="description" content="Di era digital saat ini, Artificial Intelligence (AI) telah menjadi alat yang sangat membantu dalam berbagai aktivitas, baik dalam pembelajaran maupun pekerjaan. Namun, penggunaan AI yang tidak tepat dapat membuat seseorang hanya bergantung tanpa benar-benar memahami prosesnya. Oleh karena itu, diperlukan pendekatan yang terarah agar AI dapat dimanfaatkan secara optimal." />
+    <meta property="og:locale" content="id_ID" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Pola 3-S: Cara Efektif Memanfaatkan AI dalam Belajar dan Bekerja | Pengikut Raja Capybara" />
+    <meta property="og:description" content="Di era digital saat ini, Artificial Intelligence (AI) telah menjadi alat yang sangat membantu dalam berbagai aktivitas, baik dalam pembelajaran maupun pekerjaan. Namun, penggunaan AI yang tidak tepat dapat membuat seseorang hanya bergantung tanpa benar-benar memahami prosesnya. Oleh karena itu, diperlukan pendekatan yang terarah agar AI dapat dimanfaatkan secara optimal." />
+    <meta property="og:url" content="https://pengikut-raja-capybara.github.io/blog/3s-memanfaatkan-ai" />
+    <meta property="og:site_name" content="Pengikut Raja Capybara" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Pola 3-S: Cara Efektif Memanfaatkan AI dalam Belajar dan Bekerja | Pengikut Raja Capybara" />
+    <meta name="twitter:description" content="Di era digital saat ini, Artificial Intelligence (AI) telah menjadi alat yang sangat membantu dalam berbagai aktivitas, baik dalam pembelajaran maupun pekerjaan. Namun, penggunaan AI yang tidak tepat dapat membuat seseorang hanya bergantung tanpa benar-benar memahami prosesnya. Oleh karena itu, diperlukan pendekatan yang terarah agar AI dapat dimanfaatkan secara optimal." />
+    <link rel="canonical" href="https://pengikut-raja-capybara.github.io/blog/3s-memanfaatkan-ai" />
+    <meta property="og:image" content="https://cdn.jsdelivr.net/gh/pengikut-raja-capybara/blog@content/public/images/b220a866-49f4-4dfb-9a39-25fe5cd9a7c5.jpg" />
+    <meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/pengikut-raja-capybara/blog@content/public/images/b220a866-49f4-4dfb-9a39-25fe5cd9a7c5.jpg" />
+    <!-- route-seo:end -->
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
