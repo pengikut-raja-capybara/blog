@@ -1,214 +1,249 @@
+// =============================================================================
+// cms.ts — Portable CMS Fetch Utility
+//
+// Satu file lengkap untuk mengambil file JSON dari GitHub repo via jsDelivr CDN
+// (fallback ke GitHub raw). Copy file ini ke proyek manapun untuk pakai ulang.
+//
+// Dependensi: tidak ada (hanya Web Fetch API standar).
+//
+// ─── Cara Pakai ──────────────────────────────────────────────────────────────
+//
+//   const cms = new CmsFetcher({ owner: 'org', repo: 'repo', branch: 'content' });
+//
+//   // Ambil seluruh koleksi (semua .json dalam folder)
+//   const posts = await cms.fetchCollection<BlogPost>('posts');
+//
+//   // Ambil satu entry berdasarkan slug
+//   const post = await cms.fetchEntry<BlogPost>('posts', 'my-article');
+//
+//   // Ambil satu file berdasarkan path penuh dari root repo
+//   const settings = await cms.fetchFile<SiteSettings>('data/settings.json');
+//
+// =============================================================================
+
 import type { BlogPost, SiteSettings } from '../../../types/blog';
-import { BLOG_CMS_SOURCE, CACHE_CONFIG, IMAGE_PROXY_CONFIG } from '../config/cmsSource';
-import { fetchJson, fetchText } from './cmsHttp';
-import { resolveCmsSourceFromEnv } from './cmsSourceResolver';
-import type { CmsSourceConfig } from '../types/cms';
 
-export type { CmsSourceConfig } from '../types/cms';
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-const DEFAULT_CMS_SOURCE = resolveCmsSourceFromEnv(BLOG_CMS_SOURCE);
-const DEFAULT_CMS_BRANCH = DEFAULT_CMS_SOURCE.branch ?? 'content';
-// const CONTENT_IMAGE_PROXY = IMAGE_PROXY_CONFIG.proxy;
-const CONTENT_IMAGE_QUALITY = IMAGE_PROXY_CONFIG.quality;
-const CONTENT_IMAGE_WIDTH = IMAGE_PROXY_CONFIG.width;
+export interface CmsSourceConfig {
+  owner: string;
+  repo: string;
+  branch?: string;
+}
 
-const latestContentRefCacheBySource = new Map<string, { ref: string; fetchedAt: number }>();
-const latestRefRequestWindowCacheBySource = new Map<string, { startsAt: number; hits: number }>();
+export type CmsSourceOverride = Partial<CmsSourceConfig> | undefined;
 
-type JsDelivrFlatFileEntry = {
-  name: string;
-  hash: string;
-  size: number;
+// ─── Source Configuration ─────────────────────────────────────────────────────
+
+/** Ubah nilai ini sesuai repo target proyek. */
+export const BLOG_CMS_SOURCE: CmsSourceConfig = {
+  owner: 'pengikut-raja-capybara',
+  repo: 'blog',
+  branch: 'content',
 };
 
-type JsDelivrFlatResponse = {
-  files: JsDelivrFlatFileEntry[];
+export const IMAGE_PROXY_CONFIG = {
+  proxy: 'weserv' as const,
+  quality: 75,
+  width: 1200,
 };
 
-type GitHubBranchResponse = {
-  commit: {
-    sha: string;
-  };
+export const CACHE_CONFIG = {
+  /** TTL cache commit SHA terbaru (ms). */
+  latestRefTtlMs: 60 * 1000,
+  /** Maks hit ke GitHub Branch API per window. */
+  latestRefMaxHitsPerHour: 4,
+  /** Durasi window rate-limit (ms). */
+  latestRefWindowMs: 60 * 60 * 1000,
 };
 
-const getSourceKey = (source: CmsSourceConfig): string => {
-  return `${source.owner}/${source.repo}@${source.branch ?? DEFAULT_CMS_BRANCH}`;
-};
+// ─── HTTP Utilities ───────────────────────────────────────────────────────────
 
-const getSourceBranch = (source: CmsSourceConfig): string => {
-  return source.branch ?? DEFAULT_CMS_BRANCH;
-};
+const CDN_HOSTS = new Set([
+  'cdn.jsdelivr.net',
+  'data.jsdelivr.net',
+  'raw.githubusercontent.com',
+  'wsrv.nl',
+  'images.weserv.nl',
+  'cdn.statically.io',
+]);
 
-const buildBranchApiUrl = (source: CmsSourceConfig) => {
+// Gunakan env variable ini saat development untuk simulasi CDN down.
+// Contoh di .env.local: VITE_SIMULATE_ALL_CDN_DOWN=true
+const SIMULATE_ALL_CDN_DOWN = import.meta.env.VITE_SIMULATE_ALL_CDN_DOWN === 'true';
+
+function isCdnUrl(url: string): boolean {
+  try {
+    return CDN_HOSTS.has(new URL(url).host);
+  } catch {
+    return false;
+  }
+}
+
+async function assertResponse(url: string): Promise<Response> {
+  if (SIMULATE_ALL_CDN_DOWN && isCdnUrl(url)) {
+    throw new Error(`Simulated CDN outage for ${url}`);
+  }
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Request failed (${response.status}) to ${url}`);
+  }
+
+  return response;
+}
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const response = await assertResponse(url);
+  return (await response.json()) as T;
+}
+
+async function fetchText(url: string): Promise<string> {
+  const response = await assertResponse(url);
+  return response.text();
+}
+
+// ─── Internal Types ───────────────────────────────────────────────────────────
+
+type JsDelivrFlatFileEntry = { name: string; hash: string; size: number };
+type JsDelivrFlatResponse = { files: JsDelivrFlatFileEntry[] };
+type GitHubBranchResponse = { commit: { sha: string } };
+
+// ─── URL Builders ─────────────────────────────────────────────────────────────
+
+function getSourceBranch(source: CmsSourceConfig): string {
+  return source.branch ?? 'content';
+}
+
+function getSourceKey(source: CmsSourceConfig): string {
+  return `${source.owner}/${source.repo}@${getSourceBranch(source)}`;
+}
+
+function encodePath(path: string): string {
+  return path.split('/').map(encodeURIComponent).join('/');
+}
+
+function buildJsDelivrRawUrl(path: string, source: CmsSourceConfig, ref: string): string {
+  return `https://cdn.jsdelivr.net/gh/${source.owner}/${source.repo}@${encodeURIComponent(ref)}/${encodePath(path)}`;
+}
+
+function buildGitHubRawUrl(path: string, source: CmsSourceConfig, ref: string): string {
+  return `https://raw.githubusercontent.com/${source.owner}/${source.repo}/${encodeURIComponent(ref)}/${encodePath(path)}`;
+}
+
+function buildBranchApiUrl(source: CmsSourceConfig): string {
   return `https://api.github.com/repos/${source.owner}/${source.repo}/branches/${encodeURIComponent(getSourceBranch(source))}`;
-};
+}
 
-const buildRawUrl = (
-  path: string,
-  source: CmsSourceConfig,
-  ref: string = getSourceBranch(source),
-) => {
-  const encodedPath = path
-    .split('/')
-    .map((segment) => encodeURIComponent(segment))
-    .join('/');
-
-  return `https://cdn.jsdelivr.net/gh/${source.owner}/${source.repo}@${encodeURIComponent(ref)}/${encodedPath}`;
-};
-
-const buildGitHubRawUrl = (
-  path: string,
-  source: CmsSourceConfig,
-  ref: string = getSourceBranch(source),
-) => {
-  const encodedPath = path
-    .split('/')
-    .map((segment) => encodeURIComponent(segment))
-    .join('/');
-
-  return `https://raw.githubusercontent.com/${source.owner}/${source.repo}/${encodeURIComponent(ref)}/${encodedPath}`;
-};
-
-const buildJsDelivrFlatApiUrl = (
-  source: CmsSourceConfig,
-  ref: string = getSourceBranch(source),
-) => {
+function buildJsDelivrFlatApiUrl(source: CmsSourceConfig, ref: string): string {
   return `https://data.jsdelivr.com/v1/package/gh/${source.owner}/${source.repo}@${encodeURIComponent(ref)}/flat`;
-};
+}
 
-const isAbsoluteHttpUrl = (value: string) => {
-  return value.startsWith('http://') || value.startsWith('https://');
-};
+// ─── Image URL Helpers ────────────────────────────────────────────────────────
 
-const buildWeservUrl = (sourceUrl: string): string => {
-  const parsed = new URL(sourceUrl);
-  const weservSource = `${parsed.protocol === 'https:' ? 'ssl:' : ''}${parsed.host}${parsed.pathname}${parsed.search}`;
+const isAbsoluteHttpUrl = (value: string) =>
+  value.startsWith('http://') || value.startsWith('https://');
+
+function buildWeservUrl(sourceUrl: string): string {
   const params = new URLSearchParams({
-    url: weservSource,
-    q: Number.isFinite(CONTENT_IMAGE_QUALITY) ? String(CONTENT_IMAGE_QUALITY) : '75',
+    url: sourceUrl,
+    q: String(IMAGE_PROXY_CONFIG.quality),
     output: 'webp',
   });
 
-  if (Number.isFinite(CONTENT_IMAGE_WIDTH) && CONTENT_IMAGE_WIDTH > 0) {
-    params.set('w', String(CONTENT_IMAGE_WIDTH));
+  if (IMAGE_PROXY_CONFIG.width > 0) {
+    params.set('w', String(IMAGE_PROXY_CONFIG.width));
   }
 
-  return `https://images.weserv.nl/?${params.toString()}`;
-};
+  return `https://wsrv.nl/?${params.toString()}`;
+}
 
-// const buildStaticallyUrl = (sourceUrl: string): string => {
-//   const normalizedSource = sourceUrl.replace(/^https?:\/\//, '');
-//   const params = new URLSearchParams({
-//     quality: Number.isFinite(CONTENT_IMAGE_QUALITY) ? String(CONTENT_IMAGE_QUALITY) : '75',
-//     f: 'auto',
-//   });
-
-//   return `https://cdn.statically.io/img/${encodeURIComponent(normalizedSource)}?${params.toString()}`;
-// };
-
-const toOptimizedImageUrl = (sourceUrl: string): string => {
+function toOptimizedImageUrl(sourceUrl: string): string {
   try {
-    // if (CONTENT_IMAGE_PROXY === 'none') {
-    //   return sourceUrl;
-    // }
-
-    // if (CONTENT_IMAGE_PROXY === 'statically') {
-    //   return buildStaticallyUrl(sourceUrl);
-    // }
-
     return buildWeservUrl(sourceUrl);
   } catch (error) {
     console.warn('Failed to build optimized image URL, fallback to source URL', error);
     return sourceUrl;
   }
-};
+}
 
+/**
+ * Resolve URL aset konten (gambar, dsb.) dari path relatif repo atau URL absolut.
+ * Path relatif akan diarahkan ke jsDelivr CDN dan dioptimasi via weserv.
+ */
 export const resolveContentAssetUrl = (
   assetPath: string,
-  source: CmsSourceConfig = DEFAULT_CMS_SOURCE,
+  source: CmsSourceConfig = BLOG_CMS_SOURCE,
 ): string => {
   const trimmedPath = assetPath.trim();
 
-  if (trimmedPath.length === 0) {
-    return '';
-  }
+  if (trimmedPath.length === 0) return '';
 
   if (!isAbsoluteHttpUrl(trimmedPath)) {
     const normalized = trimmedPath.replace(/^\/+/, '');
     const prefixedPath = normalized.startsWith('assets/') ? `public/${normalized}` : normalized;
-
-    return toOptimizedImageUrl(buildRawUrl(prefixedPath, source));
+    return toOptimizedImageUrl(buildJsDelivrRawUrl(prefixedPath, source, getSourceBranch(source)));
   }
 
   return toOptimizedImageUrl(trimmedPath);
 };
 
+/**
+ * Resolve URL gambar artikel: path relatif → jsDelivr CDN → weserv.
+ * Mengembalikan placeholder jika path kosong.
+ */
 export function resolveCmsImageUrl(
   imagePath: string | undefined,
-  source: CmsSourceConfig = DEFAULT_CMS_SOURCE,
+  source: CmsSourceConfig = BLOG_CMS_SOURCE,
 ): string {
-  if (!imagePath) {
-    return '/images/placeholder-blog.jpg';
-  }
+  if (!imagePath) return '/images/placeholder-blog.jpg';
 
-  if (/^https?:\/\//i.test(imagePath)) {
-    return imagePath;
-  }
+  if (/^https?:\/\//i.test(imagePath)) return imagePath;
 
   const normalizedPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
   const repoAssetPath = normalizedPath.startsWith('/images/')
     ? `/public${normalizedPath}`
     : normalizedPath;
 
-  const cdnUrl = `https://cdn.jsdelivr.net/gh/${source.owner}/${source.repo}@${getSourceBranch(source)}${repoAssetPath}`;
+  // Optimasi: Gunakan SHA dari cache jika tersedia agar cache CDN bersifat permanen (immutable)
+  const sourceKey = getSourceKey(source);
+  const cachedRef = latestContentRefCacheBySource.get(sourceKey);
+  const ref = cachedRef?.ref ?? getSourceBranch(source);
+
+  const cdnUrl = `https://cdn.jsdelivr.net/gh/${source.owner}/${source.repo}@${ref}${repoAssetPath}`;
   return toOptimizedImageUrl(cdnUrl);
 }
 
-const parseJsonContent = <T>(rawText: string, sourcePath: string): T => {
-  try {
-    return JSON.parse(rawText.trim()) as T;
-  } catch (error) {
-    throw new Error(`Content at ${sourcePath} is not valid JSON`, { cause: error });
-  }
-};
+// ─── Commit SHA Cache ─────────────────────────────────────────────────────────
 
-const getLatestContentRef = async (source: CmsSourceConfig): Promise<string> => {
+const latestContentRefCacheBySource = new Map<string, { ref: string; fetchedAt: number }>();
+const latestRefRequestWindowCacheBySource = new Map<string, { startsAt: number; hits: number }>();
+
+async function getLatestContentRef(source: CmsSourceConfig): Promise<string> {
   const sourceKey = getSourceKey(source);
   const sourceBranch = getSourceBranch(source);
   const now = Date.now();
+
   const latestContentRefCache = latestContentRefCacheBySource.get(sourceKey);
   const latestRefRequestWindowCache = latestRefRequestWindowCacheBySource.get(sourceKey);
 
-  if (
-    latestContentRefCache &&
-    now - latestContentRefCache.fetchedAt < CACHE_CONFIG.latestRefTtlMs
-  ) {
+  if (latestContentRefCache && now - latestContentRefCache.fetchedAt < CACHE_CONFIG.latestRefTtlMs) {
     return latestContentRefCache.ref;
   }
 
   const windowMs = CACHE_CONFIG.latestRefWindowMs;
   const maxHits = CACHE_CONFIG.latestRefMaxHitsPerHour;
 
-  if (
-    !latestRefRequestWindowCache ||
-    now - latestRefRequestWindowCache.startsAt >= windowMs
-  ) {
-    latestRefRequestWindowCacheBySource.set(sourceKey, {
-      startsAt: now,
-      hits: 0,
-    });
+  if (!latestRefRequestWindowCache || now - latestRefRequestWindowCache.startsAt >= windowMs) {
+    latestRefRequestWindowCacheBySource.set(sourceKey, { startsAt: now, hits: 0 });
   }
 
   const currentWindowCache = latestRefRequestWindowCacheBySource.get(sourceKey);
 
   if (currentWindowCache && currentWindowCache.hits >= maxHits) {
-    if (latestContentRefCache) {
-      return latestContentRefCache.ref;
-    }
-
-    console.warn(
-      `Latest ref API hit limit reached (${maxHits}/hour), fallback to branch ref`,
-    );
+    if (latestContentRefCache) return latestContentRefCache.ref;
+    console.warn(`Latest ref API hit limit reached (${maxHits}/hour), fallback to branch ref`);
     return sourceBranch;
   }
 
@@ -220,41 +255,58 @@ const getLatestContentRef = async (source: CmsSourceConfig): Promise<string> => 
   try {
     const branchResponse = await fetchJson<GitHubBranchResponse>(buildBranchApiUrl(source));
     const ref = branchResponse.commit.sha;
-
-    latestContentRefCacheBySource.set(sourceKey, {
-      ref,
-      fetchedAt: now,
-    });
-
+    latestContentRefCacheBySource.set(sourceKey, { ref, fetchedAt: now });
     return ref;
   } catch (error) {
     console.warn('Failed to resolve latest commit SHA, fallback to branch ref', error);
     return sourceBranch;
   }
-};
+}
 
-const getDetailByRawPath = async <T>(
+// ─── JSON Parse Helper ────────────────────────────────────────────────────────
+
+function parseJsonContent<T>(rawText: string, sourcePath: string): T {
+  try {
+    return JSON.parse(rawText.trim()) as T;
+  } catch (error) {
+    throw new Error(`Content at ${sourcePath} is not valid JSON`, { cause: error });
+  }
+}
+
+async function getDetailByRawPath<T>(
   path: string,
   source: CmsSourceConfig,
   ref?: string,
-): Promise<T> => {
+): Promise<T> {
   const targetRef = ref ?? (await getLatestContentRef(source));
 
   try {
-    const rawUrl = buildRawUrl(path, source, targetRef);
-    const rawText = await fetchText(rawUrl);
-
+    const rawText = await fetchText(buildJsDelivrRawUrl(path, source, targetRef));
     return parseJsonContent<T>(rawText, path);
   } catch (error) {
     console.warn('Failed to fetch detail from jsDelivr, fallback to GitHub raw', error);
     const rawText = await fetchText(buildGitHubRawUrl(path, source, targetRef));
     return parseJsonContent<T>(rawText, path);
   }
-};
+}
+
+// ─── CmsFetcher ───────────────────────────────────────────────────────────────
 
 /**
- * CmsFetcher is a reusable module to fetch JSON contents from a GitHub repository
- * using JsDelivr and GitHub raw API.
+ * CmsFetcher adalah modul reusable untuk mengambil konten JSON dari GitHub repo
+ * via jsDelivr CDN (fallback ke GitHub raw).
+ *
+ * @example
+ * const cms = new CmsFetcher({ owner: 'org', repo: 'repo', branch: 'content' });
+ *
+ * // Semua .json dalam folder → array
+ * const posts = await cms.fetchCollection<BlogPost>('posts');
+ *
+ * // Satu entry berdasarkan slug
+ * const post = await cms.fetchEntry<BlogPost>('posts', 'my-article');
+ *
+ * // Satu file berdasarkan path penuh dari root repo
+ * const settings = await cms.fetchFile<SiteSettings>('data/settings.json');
  */
 export class CmsFetcher {
   defaultSource: CmsSourceConfig;
@@ -266,11 +318,17 @@ export class CmsFetcher {
   }
 
   /**
-   * Fetches all JSON files inside a specific folder within the base path.
+   * Ambil semua file `.json` dalam folder di dalam `basePath`.
+   * @example cms.fetchCollection<BlogPost>('posts') // → BlogPost[]
    */
-  async fetchCollection<T>(folder: string, source: CmsSourceConfig = this.defaultSource): Promise<T[]> {
+  async fetchCollection<T>(
+    folder: string,
+    source: CmsSourceConfig = this.defaultSource,
+  ): Promise<T[]> {
     const latestRef = await getLatestContentRef(source);
-    const response = await fetchJson<JsDelivrFlatResponse>(buildJsDelivrFlatApiUrl(source, latestRef));
+    const response = await fetchJson<JsDelivrFlatResponse>(
+      buildJsDelivrFlatApiUrl(source, latestRef),
+    );
 
     const folderPath = `${this.basePath}/${folder}`.replace(/^\/+|\/+$/g, '');
     const folderPrefix = `/${folderPath}/`;
@@ -279,25 +337,25 @@ export class CmsFetcher {
       .filter((entry) => entry.name.startsWith(folderPrefix) && entry.name.endsWith('.json'))
       .sort((a, b) => a.name.localeCompare(b.name));
 
-    const items = await Promise.all(
-      entryFiles.map(async (file) => {
-        const normalizedPath = file.name.replace(/^\/+/, '');
-        return getDetailByRawPath<T>(normalizedPath, source, latestRef);
-      }),
+    return Promise.all(
+      entryFiles.map((file) =>
+        getDetailByRawPath<T>(file.name.replace(/^\/+/, ''), source, latestRef),
+      ),
     );
-
-    return items;
   }
 
   /**
-   * Fetches a specific JSON file based on its slug inside the given folder.
+   * Ambil satu file `.json` berdasarkan slug di dalam folder.
+   * @example cms.fetchEntry<BlogPost>('posts', 'my-article')
    */
-  async fetchEntry<T>(folder: string, slug: string, source: CmsSourceConfig = this.defaultSource): Promise<T> {
+  async fetchEntry<T>(
+    folder: string,
+    slug: string,
+    source: CmsSourceConfig = this.defaultSource,
+  ): Promise<T> {
     const safeSlug = slug.trim();
 
-    if (!safeSlug) {
-      throw new Error('Invalid entry slug.');
-    }
+    if (!safeSlug) throw new Error('Invalid entry slug.');
 
     const folderPath = `${this.basePath}/${folder}`.replace(/^\/+|\/+$/g, '');
     const path = `${folderPath}/${safeSlug}.json`;
@@ -314,7 +372,8 @@ export class CmsFetcher {
   }
 
   /**
-   * Fetches a specific JSON file given its relative path.
+   * Ambil satu file `.json` berdasarkan path penuh dari root repo.
+   * @example cms.fetchFile<SiteSettings>('data/settings.json')
    */
   async fetchFile<T>(path: string, source: CmsSourceConfig = this.defaultSource): Promise<T> {
     const latestRef = await getLatestContentRef(source);
@@ -322,32 +381,33 @@ export class CmsFetcher {
   }
 }
 
-// -----------------------------------------------------
-// Legacy / Current Blog Specific Exports
-// -----------------------------------------------------
+// ─── Default Instance ─────────────────────────────────────────────────────────
 
-export const blogCmsFetcher = new CmsFetcher(DEFAULT_CMS_SOURCE, 'content');
+/** Instance siap pakai untuk proyek pengikut-raja-capybara/blog. */
+export const blogCmsFetcher = new CmsFetcher(BLOG_CMS_SOURCE, 'content');
 
-export async function fetchPosts(source: CmsSourceConfig = DEFAULT_CMS_SOURCE): Promise<BlogPost[]> {
+// ─── Blog-specific Exports ────────────────────────────────────────────────────
+
+export async function fetchPosts(source: CmsSourceConfig = BLOG_CMS_SOURCE): Promise<BlogPost[]> {
   return blogCmsFetcher.fetchCollection<BlogPost>('posts', source);
 }
 
 export async function fetchPostBySlug(
   slug: string,
-  source: CmsSourceConfig = DEFAULT_CMS_SOURCE,
+  source: CmsSourceConfig = BLOG_CMS_SOURCE,
 ): Promise<BlogPost> {
   try {
     return await blogCmsFetcher.fetchEntry<BlogPost>('posts', slug, source);
   } catch (error) {
-     if (error instanceof Error && error.message.includes('tidak ditemukan')) {
-        throw new Error('Artikel tidak ditemukan.');
-     }
-     throw error;
+    if (error instanceof Error && error.message.includes('tidak ditemukan')) {
+      throw new Error('Artikel tidak ditemukan.');
+    }
+    throw error;
   }
 }
 
 export async function fetchSiteSettings(
-  source: CmsSourceConfig = DEFAULT_CMS_SOURCE,
+  source: CmsSourceConfig = BLOG_CMS_SOURCE,
 ): Promise<SiteSettings> {
   return blogCmsFetcher.fetchFile<SiteSettings>('data/settings.json', source);
 }

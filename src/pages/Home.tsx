@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import BlogCard from '../features/blog/components/BlogCard';
 import { SeoMeta } from '../components/seo';
-import { BLOG_CMS_SOURCE } from '../features/blog/config/cmsSource';
+import { BLOG_CMS_SOURCE } from '../features/blog/services/cms';
 import {
   useBlogPostsQuery,
   useSiteSettingsQuery,

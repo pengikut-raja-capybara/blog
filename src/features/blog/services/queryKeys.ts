@@ -1,4 +1,4 @@
-import type { CmsSourceConfig } from '../types/cms';
+import type { CmsSourceConfig } from './cms';
 
 export const blogQueryKeys = {
   posts: (source: CmsSourceConfig) => ['cms', 'posts', source] as const,

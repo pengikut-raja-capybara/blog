@@ -3,7 +3,7 @@ import { Share2, ArrowLeft, Clock, CalendarDays, User, Sparkles, List } from 'lu
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { SeoMeta } from '../components/seo';
 import CdnImage from '../components/ui/CdnImage';
-import { BLOG_CMS_SOURCE } from '../features/blog/config/cmsSource';
+import { BLOG_CMS_SOURCE } from '../features/blog/services/cms';
 import { useBlogPostQuery, useBlogPostsQuery } from '../features/blog/hooks/useBlogQueries';
 import { resolveCmsImageUrl } from '../features/blog/services/cms';
 import { toSafeHtml } from '../utils/richContent';
@@ -123,9 +123,12 @@ function BlogDetail() {
   
   const post = postQuery.data;
 
-  // Pre-process HTML to inject heading IDs and extract TOC — must be above early returns (hooks rule)
-  const rawBody = post ? toSafeHtml(post.body, BLOG_CMS_SOURCE) : '';
-  const { html: renderedBody, toc } = useMemo(() => processHtmlForToc(rawBody), [rawBody]);
+  // Pre-process HTML to inject heading IDs and extract TOC
+  const { html: renderedBody, toc, rawBody } = useMemo(() => {
+    const raw = post ? toSafeHtml(post.body, BLOG_CMS_SOURCE) : '';
+    const { html, toc: tocList } = processHtmlForToc(raw);
+    return { html, toc: tocList, rawBody: raw };
+  }, [post]);
 
   // States for interactive widgets
   const [scrollProgress, setScrollProgress] = useState(0);

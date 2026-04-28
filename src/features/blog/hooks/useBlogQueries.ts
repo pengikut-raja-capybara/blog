@@ -1,13 +1,13 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { BLOG_CMS_SOURCE } from '../config/cmsSource';
 import {
+  BLOG_CMS_SOURCE,
   fetchPostBySlug,
   fetchPosts,
   fetchSiteSettings,
 } from '../services/cms';
 import { blogQueryKeys } from '../services/queryKeys';
 import type { BlogPost, SiteSettings } from '../../../types/blog';
-import type { CmsSourceConfig } from '../types/cms';
+import type { CmsSourceConfig } from '../services/cms';
 
 export function useBlogPostsQuery(source: CmsSourceConfig = BLOG_CMS_SOURCE) {
   return useQuery<BlogPost[]>({

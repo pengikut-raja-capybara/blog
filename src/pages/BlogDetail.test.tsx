@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { BLOG_CMS_SOURCE } from '../features/blog/config/cmsSource';
+import { BLOG_CMS_SOURCE } from '../features/blog/services/cms';
 import { blogQueryKeys } from '../features/blog/services/queryKeys';
 import BlogDetail from './BlogDetail';
 import type { BlogPost } from '../types/blog';
