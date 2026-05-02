@@ -5,11 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && npm run spa:routes && npm run sitemap:generate",
+    "build": "tsc -b && vite build && npm run spa:routes",
     "lint": "eslint .",
     "preview": "vite preview",
     "spa:routes": "node scripts/generate-spa-routes.mjs",
-    "sitemap:generate": "node scripts/generate-sitemap.mjs",
+    "sitemap:generate": "node scripts/generate-spa-routes.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui"

@@ -109,6 +109,19 @@ async function fetchText(url: string): Promise<string> {
 type JsDelivrFlatFileEntry = { name: string; hash: string; size: number };
 type JsDelivrFlatResponse = { files: JsDelivrFlatFileEntry[] };
 type GitHubBranchResponse = { commit: { sha: string } };
+type ContentIndexPostEntry = {
+  slug?: unknown;
+  title?: unknown;
+  description?: unknown;
+  excerpt?: unknown;
+  date?: unknown;
+  tags?: unknown;
+  image?: unknown;
+  author?: unknown;
+};
+type ContentIndexFile = {
+  posts?: unknown;
+};
 
 // ─── URL Builders ─────────────────────────────────────────────────────────────
 
@@ -273,6 +286,95 @@ function parseJsonContent<T>(rawText: string, sourcePath: string): T {
   }
 }
 
+function toStringOrNull(value: unknown): string | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function toStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((item) => toStringOrNull(item))
+    .filter((item): item is string => Boolean(item));
+}
+
+function mapContentIndexPosts(data: ContentIndexFile): BlogPost[] | null {
+  if (!Array.isArray(data.posts)) {
+    return null;
+  }
+
+  const mapped = data.posts
+    .map((entry): BlogPost | null => {
+      if (!entry || typeof entry !== 'object') {
+        return null;
+      }
+
+      const item = entry as ContentIndexPostEntry;
+      const slug = toStringOrNull(item.slug);
+
+      if (!slug) {
+        return null;
+      }
+
+      const title = toStringOrNull(item.title) ?? slug;
+      const excerpt = toStringOrNull(item.description) ?? toStringOrNull(item.excerpt) ?? undefined;
+      const date = toStringOrNull(item.date) ?? '1970-01-01';
+      const image = toStringOrNull(item.image) ?? undefined;
+      const author = toStringOrNull(item.author) ?? undefined;
+
+      return {
+        slug,
+        title,
+        excerpt,
+        date,
+        image,
+        author,
+        tags: toStringArray(item.tags),
+        body: '',
+      };
+    })
+    .filter((item): item is BlogPost => Boolean(item))
+    .sort((a, b) => a.slug.localeCompare(b.slug));
+
+  return mapped;
+}
+
+async function getPostsFromContentIndex(source: CmsSourceConfig): Promise<BlogPost[] | null> {
+  const branchRef = getSourceBranch(source);
+  const sourceKey = getSourceKey(source);
+  const cachedRef = latestContentRefCacheBySource.get(sourceKey)?.ref;
+
+  const refsToTry = [branchRef, cachedRef].filter((ref, index, arr): ref is string =>
+    typeof ref === 'string' && ref.length > 0 && arr.indexOf(ref) === index,
+  );
+
+  for (const ref of refsToTry) {
+    try {
+      const contentIndex = await getDetailByRawPath<ContentIndexFile>('content-index.json', source, ref);
+      const mappedPosts = mapContentIndexPosts(contentIndex);
+
+      if (mappedPosts) {
+        return mappedPosts;
+      }
+
+      console.warn('content-index.json ditemukan tapi format posts tidak valid, fallback ke koleksi posts/*.json');
+      return null;
+    } catch (error) {
+      console.warn(`Gagal mengambil content-index.json dari ref ${ref}`, error);
+    }
+  }
+
+  console.warn('Gagal mengambil content-index.json, fallback ke koleksi posts/*.json');
+  return null;
+}
+
 async function getDetailByRawPath<T>(
   path: string,
   source: CmsSourceConfig,
@@ -325,12 +427,22 @@ export class CmsFetcher {
     folder: string,
     source: CmsSourceConfig = this.defaultSource,
   ): Promise<T[]> {
+    const normalizedFolder = folder.trim().replace(/^\/+|\/+$/g, '');
+
+    if (normalizedFolder === 'posts') {
+      const postsFromIndex = await getPostsFromContentIndex(source);
+
+      if (postsFromIndex) {
+        return postsFromIndex as T[];
+      }
+    }
+
     const latestRef = await getLatestContentRef(source);
     const response = await fetchJson<JsDelivrFlatResponse>(
       buildJsDelivrFlatApiUrl(source, latestRef),
     );
 
-    const folderPath = `${this.basePath}/${folder}`.replace(/^\/+|\/+$/g, '');
+    const folderPath = `${this.basePath}/${normalizedFolder}`.replace(/^\/+|\/+$/g, '');
     const folderPrefix = `/${folderPath}/`;
 
     const entryFiles = response.files

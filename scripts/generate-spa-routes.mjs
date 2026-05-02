@@ -8,6 +8,9 @@ const CONTENT_OWNER = (process.env.CONTENT_OWNER ?? 'pengikut-raja-capybara').tr
 const CONTENT_REPO = (process.env.CONTENT_REPO ?? 'blog').trim();
 const CONTENT_BRANCH = (process.env.CONTENT_BRANCH ?? 'content').trim();
 const CONTENT_POSTS_PATH = trimSlashes(process.env.CONTENT_POSTS_PATH ?? 'content/posts');
+const CONTENT_TOC_FILENAME = (process.env.CONTENT_TOC_FILENAME ?? 'content-index.json').trim() || 'content-index.json';
+const CONTENT_TOC_OUTPUT_PATH = (process.env.CONTENT_TOC_OUTPUT_PATH ?? '').trim();
+const SITEMAP_OUTPUT_PATH = process.env.SITEMAP_OUTPUT_PATH ?? path.join(DIST_DIR, 'sitemap.xml');
 const STATIC_ROUTES = (process.env.STATIC_ROUTES ?? 'about,contact')
   .split(',')
   .map((value) => value.trim())
@@ -41,6 +44,25 @@ function parseSlugFromFileName(fileName) {
   return slug.length > 0 ? slug : null;
 }
 
+function normalizeString(value) {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function normalizeStringArray(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((item) => normalizeString(item))
+    .filter(Boolean);
+}
+
 function escapeHtml(value) {
   return value
     .replaceAll('&', '&amp;')
@@ -50,9 +72,23 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;');
 }
 
+function escapeXml(value) {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&apos;');
+}
+
 function buildAbsoluteUrl(routePath) {
   const cleanRoute = routePath ? `/${trimSlashes(routePath)}` : '/';
   return `${SITE_URL}${APP_BASE_PATH}${cleanRoute === '/' ? '/' : cleanRoute}`;
+}
+
+function buildSitemapUrl(routePath) {
+  const url = buildAbsoluteUrl(routePath);
+  return url.endsWith('/') ? url : `${url}/`;
 }
 
 function buildContentRawUrl(contentPath) {
@@ -189,11 +225,11 @@ async function getPostsMetadata() {
         }
 
         const content = await response.json();
-        const title = typeof content.title === 'string' && content.title.trim().length > 0
-          ? content.title.trim()
+        const title = normalizeString(content.title)
+          ? normalizeString(content.title)
           : entry.slug;
-        const excerpt = typeof content.excerpt === 'string' && content.excerpt.trim().length > 0
-          ? content.excerpt.trim()
+        const excerpt = normalizeString(content.excerpt)
+          ? normalizeString(content.excerpt)
           : `Baca artikel ${title} di Pengikut Raja Capybara.`;
 
         return {
@@ -201,6 +237,10 @@ async function getPostsMetadata() {
           title,
           description: excerpt,
           image: resolveImageForMeta(content.image),
+          author: normalizeString(content.author),
+          date: normalizeString(content.date),
+          tags: normalizeStringArray(content.tags),
+          path: entry.path,
         };
       } catch (error) {
         console.warn(`Failed to parse metadata for ${entry.slug}, fallback to slug-based meta.`, error);
@@ -210,6 +250,10 @@ async function getPostsMetadata() {
           title: entry.slug,
           description: `Baca artikel ${entry.slug} di Pengikut Raja Capybara.`,
           image: null,
+          author: null,
+          date: null,
+          tags: [],
+          path: entry.path,
         };
       }
     }),
@@ -245,6 +289,109 @@ function getStaticRouteMetadata(routePath) {
     image: null,
     type: 'website',
   };
+}
+
+function buildSitemapXml(urlEntries) {
+  const lines = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+  ];
+
+  for (const entry of urlEntries) {
+    lines.push('  <url>');
+    lines.push(`    <loc>${escapeXml(entry.loc)}</loc>`);
+    if (entry.lastmod) {
+      lines.push(`    <lastmod>${escapeXml(entry.lastmod)}</lastmod>`);
+    }
+    lines.push('  </url>');
+  }
+
+  lines.push('</urlset>');
+  lines.push('');
+
+  return lines.join('\n');
+}
+
+function buildSitemapTxt(urlEntries) {
+  return `${urlEntries.map((entry) => entry.loc).join('\n')}\n`;
+}
+
+function buildContentToc(postsMetadata) {
+  return {
+    generatedAt: new Date().toISOString(),
+    source: {
+      owner: CONTENT_OWNER,
+      repo: CONTENT_REPO,
+      branch: CONTENT_BRANCH,
+      postsPath: CONTENT_POSTS_PATH,
+    },
+    total: postsMetadata.length,
+    posts: postsMetadata.map((post) => ({
+      slug: post.slug,
+      title: post.title,
+      description: post.description,
+      date: post.date,
+      tags: post.tags,
+      image: post.image,
+      author: post.author,
+      path: post.path,
+      url: buildAbsoluteUrl(post.slug),
+    })),
+  };
+}
+
+async function writeContentToc(postsMetadata) {
+  const contentToc = buildContentToc(postsMetadata);
+  const tocJson = `${JSON.stringify(contentToc, null, 2)}\n`;
+
+  const distTocPath = path.join(DIST_DIR, CONTENT_TOC_FILENAME);
+  await writeFile(distTocPath, tocJson, 'utf8');
+
+  if (CONTENT_TOC_OUTPUT_PATH) {
+    const customOutputPath = path.isAbsolute(CONTENT_TOC_OUTPUT_PATH)
+      ? CONTENT_TOC_OUTPUT_PATH
+      : path.resolve(CONTENT_TOC_OUTPUT_PATH);
+
+    await mkdir(path.dirname(customOutputPath), { recursive: true });
+    await writeFile(customOutputPath, tocJson, 'utf8');
+    console.log(`Generated content TOC: ${distTocPath} and ${customOutputPath}`);
+    return;
+  }
+
+  console.log(`Generated content TOC: ${distTocPath}`);
+}
+
+async function writeSitemap(postsMetadata) {
+  const today = new Date().toISOString().split('T')[0];
+
+  const urls = [
+    {
+      loc: buildSitemapUrl(''),
+      lastmod: today,
+    },
+    ...STATIC_ROUTES.map((route) => ({
+      loc: buildSitemapUrl(route),
+      lastmod: today,
+    })),
+    ...postsMetadata
+      .map((post) => ({
+        loc: buildSitemapUrl(encodeURIComponent(post.slug)),
+        lastmod: post.date ?? today,
+      }))
+      .sort((a, b) => a.loc.localeCompare(b.loc)),
+  ];
+
+  const xml = buildSitemapXml(urls);
+  await writeFile(SITEMAP_OUTPUT_PATH, xml, 'utf8');
+
+  const txt = buildSitemapTxt(urls);
+  const txtPath = SITEMAP_OUTPUT_PATH.endsWith('.xml')
+    ? `${SITEMAP_OUTPUT_PATH.slice(0, -4)}.txt`
+    : `${SITEMAP_OUTPUT_PATH}.txt`;
+
+  await writeFile(txtPath, txt, 'utf8');
+
+  console.log(`Generated sitemap with ${urls.length} URLs: ${SITEMAP_OUTPUT_PATH} and ${txtPath}`);
 }
 
 async function createRouteFile(routePath, indexHtml, metadata) {
@@ -311,6 +458,9 @@ async function main() {
   await Promise.all(
     Array.from(uniqueRoutes.entries()).map(([route, metadata]) => createRouteFile(route, indexHtml, metadata)),
   );
+
+  await writeContentToc(postsMetadata);
+  await writeSitemap(postsMetadata);
 
   console.log(`Generated SPA route files with static SEO: ${uniqueRoutes.size}`);
 }

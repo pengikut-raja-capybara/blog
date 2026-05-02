@@ -26,6 +26,38 @@ jobs:
       - name: Build
         run: bun run build
 
+      - name: Publish content index to content branch
+        run: |
+          set -euo pipefail
+
+          if [ ! -f dist/content-index.json ]; then
+            echo "dist/content-index.json tidak ditemukan."
+            exit 1
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          rm -rf .tmp-content-branch
+          if git ls-remote --exit-code --heads origin content >/dev/null 2>&1; then
+            git worktree add .tmp-content-branch origin/content
+          else
+            git worktree add -b content .tmp-content-branch
+          fi
+
+          cp dist/content-index.json .tmp-content-branch/content-index.json
+
+          cd .tmp-content-branch
+          git add content-index.json
+
+          if git diff --cached --quiet; then
+            echo "content-index.json tidak berubah."
+          else
+            git commit -m "chore(content): update content-index.json"
+            git push origin HEAD:content
+            echo "content-index.json berhasil di-publish ke branch content."
+          fi
+
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v3
         with:

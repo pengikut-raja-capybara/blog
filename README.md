@@ -66,8 +66,14 @@ bun run preview
 - `bun run lint` -> lint source
 - `bun run test` -> jalankan test sekali
 - `bun run test:watch` -> test mode watch
-- `bun run sitemap:generate` -> generate `sitemap.xml`
-- `bun run spa:routes` -> generate static route files untuk deep-link + preview crawler
+- `bun run spa:routes` -> generate static route files, `content-index.json`, dan sitemap
+- `bun run sitemap:generate` -> alias ke generator yang sama (`spa:routes`)
+
+Output tambahan dari `bun run spa:routes`:
+
+- `dist/content-index.json` -> daftar isi konten (slug, judul, deskripsi, tag, tanggal, URL)
+- Opsional: set `CONTENT_TOC_OUTPUT_PATH` untuk menyalin daftar isi ke path lain
+  (contoh untuk root branch `content`: `CONTENT_TOC_OUTPUT_PATH=./content-index.json`)
 
 ## SEO dan Sitemap
 
@@ -79,7 +85,6 @@ Project sudah menyiapkan:
 
 Generator terkait:
 
-- `scripts/generate-sitemap.mjs`
 - `scripts/generate-spa-routes.mjs`
 
 ## GitHub Actions
@@ -99,7 +104,8 @@ Pipeline:
 2. Build aplikasi
 3. Generate sitemap
 4. Generate SPA route files
-5. Deploy ke branch `gh-pages`
+5. Publish `content-index.json` ke branch `content` (jika ada perubahan)
+6. Deploy ke branch `gh-pages`
 
 ### 2) Sinkronisasi berkala (cron)
 
@@ -110,7 +116,7 @@ Trigger:
 - Tiap 3 hari (`15 0 */3 * *`)
 - Manual (`workflow_dispatch`)
 
-Pipeline sama dengan deploy utama: build + sitemap + SPA routes + publish ke `gh-pages`.
+Pipeline sama dengan deploy utama: build + sitemap + SPA routes + publish `content-index.json` ke branch `content` + publish ke `gh-pages`.
 
 ## Variable yang Perlu Disiapkan
 
