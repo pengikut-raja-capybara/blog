@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ImgHTMLAttributes } from 'react';
+import { useMemo, useState, type ImgHTMLAttributes } from 'react';
 import { BLOG_CMS_SOURCE, IMAGE_PROXY_CONFIG, resolveCmsImageUrl } from '../../features/blog/services/cms';
 import type { CmsSourceConfig } from '../../features/blog/services/cms';
 
@@ -50,7 +50,9 @@ function CdnImage({
       try {
         const originalUrl = new URL(resolvedUrl).searchParams.get('url');
         if (originalUrl) list.push(originalUrl);
-      } catch {}
+      } catch {
+        // ignore URL parsing error
+      }
     }
     
     if (!list.includes(fallbackSrc)) list.push(fallbackSrc);
@@ -59,12 +61,9 @@ function CdnImage({
 
   const [activeIndex, setActiveIndex] = useState(0);
 
-  useEffect(() => {
-    setActiveIndex(0);
-  }, [resolvedUrl]);
-
   return (
     <img
+      key={resolvedUrl}
       {...imgProps}
       src={candidates[activeIndex]}
       alt={alt}

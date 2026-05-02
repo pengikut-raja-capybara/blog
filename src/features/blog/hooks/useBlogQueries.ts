@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
   BLOG_CMS_SOURCE,
   fetchPostBySlug,
@@ -29,15 +29,10 @@ export function useBlogPostQuery(
   slug: string | undefined,
   source: CmsSourceConfig = BLOG_CMS_SOURCE,
 ) {
-  const queryClient = useQueryClient();
-  const cachedPosts = queryClient.getQueryData<BlogPost[]>(blogQueryKeys.posts(source));
-  const cachedPost = cachedPosts?.find((item) => item.slug === slug);
-
   return useQuery<BlogPost>({
     queryKey: blogQueryKeys.post(source, slug),
     queryFn: () => fetchPostBySlug(slug ?? '', source),
-    enabled: Boolean(slug) && !cachedPost,
-    initialData: cachedPost,
+    enabled: Boolean(slug),
     staleTime: 5 * 60 * 1000,
   });
 }

@@ -1,7 +1,6 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { BLOG_CMS_SOURCE } from '../features/blog/services/cms';
-import { blogQueryKeys } from '../features/blog/services/queryKeys';
 import BlogDetail from './BlogDetail';
 import type { BlogPost } from '../types/blog';
 import { createTestQueryClient, renderWithProviders } from '../test/utils';
@@ -12,14 +11,18 @@ const { mockFetchPostBySlug } = vi.hoisted(() => {
   };
 });
 
-vi.mock('../features/blog/services/cms', () => ({
-  fetchPostBySlug: mockFetchPostBySlug,
-  resolveCmsImageUrl: (imagePath: string | undefined) => {
-    if (!imagePath) return '/images/placeholder-blog.jpg';
-    if (/^https?:\/\//i.test(imagePath)) return imagePath;
-    return `https://cdn.jsdelivr.net/gh/pengikut-raja-capybara/blog@content/public${imagePath}`;
-  },
-}));
+vi.mock('../features/blog/services/cms', async () => {
+  const actual = await vi.importActual('../features/blog/services/cms');
+  return {
+    ...actual,
+    fetchPostBySlug: mockFetchPostBySlug,
+    resolveCmsImageUrl: (imagePath: string | undefined) => {
+      if (!imagePath) return '/images/placeholder-blog.jpg';
+      if (/^https?:\/\//i.test(imagePath)) return imagePath;
+      return `https://cdn.jsdelivr.net/gh/pengikut-raja-capybara/blog@content/public${imagePath}`;
+    },
+  };
+});
 
 function renderDetail(path: string, queryClient = createTestQueryClient()) {
   return renderWithProviders(<BlogDetail />, {
@@ -30,26 +33,6 @@ function renderDetail(path: string, queryClient = createTestQueryClient()) {
 }
 
 describe('BlogDetail', () => {
-  it('menggunakan data cache dari list posts tanpa fetch detail baru', async () => {
-    const post: BlogPost = {
-      title: 'Pengikut Raja Capybara',
-      slug: 'pengikut-raja-capybara',
-      image: '/images/capybara-forest.jpg',
-      date: '2026-03-31',
-      author: 'Raja Capybara',
-      tags: ['alam'],
-      excerpt: 'Catatan damai dari tepian sungai.',
-      body: 'Konten artikel cache.',
-    };
-
-    const queryClient = createTestQueryClient();
-    queryClient.setQueryData(blogQueryKeys.posts(BLOG_CMS_SOURCE), [post]);
-
-    renderDetail('/blog/pengikut-raja-capybara', queryClient);
-
-    expect(await screen.findByRole('heading', { name: post.title })).toBeTruthy();
-    expect(mockFetchPostBySlug).not.toHaveBeenCalled();
-  });
 
   it('melakukan fetch detail jika cache tidak tersedia', async () => {
     const post: BlogPost = {
@@ -113,8 +96,9 @@ describe('BlogDetail', () => {
       body: '<h2>Subjudul HTML</h2><p>Isi aman</p><script>alert(1)</script>',
     };
 
+    mockFetchPostBySlug.mockResolvedValueOnce(post);
+
     const queryClient = createTestQueryClient();
-    queryClient.setQueryData(blogQueryKeys.posts(BLOG_CMS_SOURCE), [post]);
 
     const { container } = renderDetail('/blog/html-raja-capybara', queryClient);
 
@@ -155,8 +139,9 @@ describe('BlogDetail', () => {
       },
     };
 
+    mockFetchPostBySlug.mockResolvedValueOnce(post);
+
     const queryClient = createTestQueryClient();
-    queryClient.setQueryData(blogQueryKeys.posts(BLOG_CMS_SOURCE), [post]);
 
     renderDetail('/blog/rich-text-raja-capybara', queryClient);
 

@@ -11,11 +11,15 @@ const { mockFetchPosts, mockFetchSiteSettings } = vi.hoisted(() => {
   };
 });
 
-vi.mock("../features/blog/services/cms", () => ({
-  fetchPosts: mockFetchPosts,
-  fetchSiteSettings: mockFetchSiteSettings,
-  resolveCmsImageUrl: (imagePath: string | undefined) => imagePath ?? "/images/placeholder-blog.jpg",
-}));
+vi.mock("../features/blog/services/cms", async () => {
+  const actual = await vi.importActual("../features/blog/services/cms");
+  return {
+    ...actual,
+    fetchPosts: mockFetchPosts,
+    fetchSiteSettings: mockFetchSiteSettings,
+    resolveCmsImageUrl: (imagePath: string | undefined) => imagePath ?? "/images/placeholder-blog.jpg",
+  };
+});
 
 describe("Home", () => {
   it("menampilkan judul situs dan judul artikel dari CMS", async () => {

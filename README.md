@@ -113,7 +113,7 @@ File: `.github/workflows/sync-content-cron.yml`
 
 Trigger:
 
-- Tiap 3 hari (`15 0 */3 * *`)
+- Tiap 7 hari (`15 0 */7 * *`)
 - Manual (`workflow_dispatch`)
 
 Pipeline sama dengan deploy utama: build + sitemap + SPA routes + publish `content-index.json` ke branch `content` + publish ke `gh-pages`.
