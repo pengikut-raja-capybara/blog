@@ -41,9 +41,15 @@ jobs:
 
           rm -rf .tmp-content-branch
           if git ls-remote --exit-code --heads origin content >/dev/null 2>&1; then
-            git worktree add .tmp-content-branch origin/content
+            git fetch --no-tags --depth=1 origin content
+            git worktree add .tmp-content-branch --detach FETCH_HEAD
           else
-            git worktree add -b content .tmp-content-branch
+            git worktree add .tmp-content-branch --detach
+            (
+              cd .tmp-content-branch
+              git checkout --orphan content
+              git rm -rf . >/dev/null 2>&1 || true
+            )
           fi
 
           cp dist/content-index.json .tmp-content-branch/content-index.json
