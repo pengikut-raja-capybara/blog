@@ -1,0 +1,135 @@
+{
+  "generatedAt": "2026-05-02T05:13:43.998Z",
+  "source": {
+    "owner": "pengikut-raja-capybara",
+    "repo": "blog",
+    "branch": "content",
+    "postsPath": "content/posts"
+  },
+  "total": 8,
+  "posts": [
+    {
+      "slug": "3s-memanfaatkan-ai",
+      "title": "Pola 3-S: Cara Efektif Memanfaatkan AI dalam Belajar dan Bekerja",
+      "description": "Di era digital saat ini, Artificial Intelligence (AI) telah menjadi alat yang sangat membantu dalam berbagai aktivitas, baik dalam pembelajaran maupun pekerjaan. Namun, penggunaan AI yang tidak tepat dapat membuat seseorang hanya bergantung tanpa benar-benar memahami prosesnya. Oleh karena itu, diperlukan pendekatan yang terarah agar AI dapat dimanfaatkan secara optimal.",
+      "date": "2026-04-13",
+      "tags": [
+        "Teknologi",
+        "AI",
+        "Edukasi",
+        "Pekerjaan"
+      ],
+      "image": "https://cdn.jsdelivr.net/gh/pengikut-raja-capybara/blog@content/public/images/b220a866-49f4-4dfb-9a39-25fe5cd9a7c5.jpg",
+      "author": "Raja Capybara",
+      "path": "content/posts/3s-memanfaatkan-ai.json",
+      "url": "https://pengikut-raja-capybara.github.io/blog/3s-memanfaatkan-ai"
+    },
+    {
+      "slug": "ilmu-pengetahuan-terbuka",
+      "title": "Mengenal Ilmu Pengetahuan Terbuka: Menguak Rahasia Kitab Sang Raja",
+      "description": "Jika Anda memperhatikan logo Pengikut Raja Capybara, Anda akan melihat sosok Sang Raja yang duduk tenang sambil memangku sebuah buku yang bercahaya. Buku itu bukan sekadar hiasan; ia adalah simbol dari Ilmu Pengetahuan Terbuka (Open Knowledge).",
+      "date": "2026-03-31",
+      "tags": [
+        "Filosofi",
+        "Open Source",
+        "Teknologi",
+        "Edukasi"
+      ],
+      "image": "https://cdn.jsdelivr.net/gh/pengikut-raja-capybara/blog@content/public/images/65f8e992-a39f-412e-b412-1f6dd8f60e84.jpg",
+      "author": "Capybara yang Terpelajar",
+      "path": "content/posts/ilmu-pengetahuan-terbuka.json",
+      "url": "https://pengikut-raja-capybara.github.io/blog/ilmu-pengetahuan-terbuka"
+    },
+    {
+      "slug": "mengenal-git",
+      "title": "Mengenal Git: Benang Merah Kolaborasi di Kerajaan Capybara",
+      "description": "Jika Ilmu Pengetahuan Terbuka adalah isinya, maka Git adalah cara kita menjaga, merawat, dan membagikan isi tersebut tanpa kehilangan jejak sejarah. Di markas Pengikut Raja Capybara, Git bukan sekadar alat teknis; ia adalah manifestasi dari harmoni dan transparansi.",
+      "date": "2026-04-01",
+      "tags": [
+        "Teknologi",
+        "Tutorial",
+        "Open Source"
+      ],
+      "image": "https://cdn.jsdelivr.net/gh/pengikut-raja-capybara/blog@content/public/images/ccc1db7a-3968-4692-a43e-1b1ea0e17079.jpg",
+      "author": "Capybara yang Terpelajar",
+      "path": "content/posts/mengenal-git.json",
+      "url": "https://pengikut-raja-capybara.github.io/blog/mengenal-git"
+    },
+    {
+      "slug": "mengenal-javascript",
+      "title": "Mengenal JavaScript: Nyawa di Balik Halaman Web Interaktif",
+      "description": "JavaScript (sering disingkat JS) adalah bahasa pemrograman yang digunakan untuk membuat halaman web menjadi hidup dan interaktif.",
+      "date": "2026-04-01",
+      "tags": [
+        "Web",
+        "Javascript",
+        "Teknologi"
+      ],
+      "image": "https://cdn.jsdelivr.net/gh/pengikut-raja-capybara/blog@content/public/images/273587c7-41cb-4a1d-9407-9d0045a21eba.jpg",
+      "author": "Raja Capybara",
+      "path": "content/posts/mengenal-javascript.json",
+      "url": "https://pengikut-raja-capybara.github.io/blog/mengenal-javascript"
+    },
+    {
+      "slug": "mengenal-reactjs",
+      "title": "Evolusi Web Development: Menguasai Tren dan Praktik Terbaik React di 2026",
+      "description": "JavaScript kini bukan lagi sekadar bahasa skrip sederhana. Ia telah menjelma menjadi mesin pendorong utama di balik web, aplikasi mobile, backend, hingga desktop. Di tengah revolusi ini, React tetap menjadi primadona untuk urusan antarmuka pengguna (UI).",
+      "date": "2026-04-09",
+      "tags": [
+        "Web",
+        "Javascript",
+        "Teknologi",
+        "ReactJS"
+      ],
+      "image": "https://cdn.jsdelivr.net/gh/pengikut-raja-capybara/blog@content/public/images/a96c0488-ee99-4f84-b10a-020d4067326f.jpg",
+      "author": "Capybara yang Terpelajar",
+      "path": "content/posts/mengenal-reactjs.json",
+      "url": "https://pengikut-raja-capybara.github.io/blog/mengenal-reactjs"
+    },
+    {
+      "slug": "panduan-belajar-html",
+      "title": "Panduan Lengkap Belajar HTML untuk Pemula: Fondasi Utama Web Development",
+      "description": "HTML sebenarnya adalah bahasa markup. Bahasa ini tidak digunakan untuk menulis logika atau melakukan perhitungan matematis, melainkan difungsikan sebagai kerangka dasar yang menyusun struktur dan tata letak konten di sebuah halaman web",
+      "date": "2026-04-09",
+      "tags": [
+        "Web",
+        "Teknologi",
+        "HTML"
+      ],
+      "image": "https://cdn.jsdelivr.net/gh/pengikut-raja-capybara/blog@content/public/images/bea6cd11-2c14-407a-ac96-933385dbfd4c.jpg",
+      "author": "Raja Capybara",
+      "path": "content/posts/panduan-belajar-html.json",
+      "url": "https://pengikut-raja-capybara.github.io/blog/panduan-belajar-html"
+    },
+    {
+      "slug": "panduan-notebookllm",
+      "title": "Transformasi Belajar dan Bekerja: Panduan Memaksimalkan NotebookLM",
+      "description": "Kita sering kali kewalahan menghadapi lautan informasi—mulai dari laporan, artikel panjang, hingga transkrip rapat. Di sinilah NotebookLM hadir sebagai asisten riset bertenaga AI yang dirancang khusus untuk membantu Anda menyempurnakan dan mengatur ide-ide Anda. Alih-alih menjadi *chatbot* umum, aplikasi ini memungkinkan Anda membangun pusat pengetahuan pribadi di mana AI bertindak sebagai pakar yang sepenuhnya memahami detail proyek Anda. Dengan NotebookLM, Anda diajak untuk bekerja lebih cerdas, bukan lebih keras.",
+      "date": "2026-04-09",
+      "tags": [
+        "Teknologi",
+        "AI",
+        "Edukasi"
+      ],
+      "image": "https://cdn.jsdelivr.net/gh/pengikut-raja-capybara/blog@content/public/images/7a583392-0237-4fb6-b83c-b013e2d9af8d.jpg",
+      "author": "Capybara yang Terpelajar",
+      "path": "content/posts/panduan-notebookllm.json",
+      "url": "https://pengikut-raja-capybara.github.io/blog/panduan-notebookllm"
+    },
+    {
+      "slug": "pengikut-raja-capybara",
+      "title": "🌿 Pengikut Raja Capybara",
+      "description": "Selamat datang di markas digital Pengikut Raja Capybara. Kami bukanlah organisasi teknologi biasa. Kami adalah komunitas kolektif pengembang, desainer, dan pemikir yang disatukan oleh satu visi sederhana namun mendalam: membangun teknologi bukan sebagai ambisi materi, melainkan sebagai bentuk dedikasi yang tulus bagi kemanusiaan.",
+      "date": "2026-03-31",
+      "tags": [
+        "Filosofi",
+        "Teknologi",
+        "Capybara"
+      ],
+      "image": "https://cdn.jsdelivr.net/gh/pengikut-raja-capybara/blog@content/public/images/pengikut%20raja%20capybara.jpg",
+      "author": "Capybara yang Terpelajar",
+      "path": "content/posts/pengikut-raja-capybara.json",
+      "url": "https://pengikut-raja-capybara.github.io/blog/pengikut-raja-capybara"
+    }
+  ]
+}
